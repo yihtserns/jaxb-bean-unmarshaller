@@ -17,9 +17,11 @@ package org.apache.camel.spring2;
 
 import java.beans.Introspector;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
+import javax.xml.bind.annotation.XmlAttribute;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.w3c.dom.Attr;
@@ -33,6 +35,7 @@ import org.w3c.dom.NamedNodeMap;
 public class JaxbUnmarshaller {
 
     private Map<String, Constructor> localName2Constructor = new HashMap<>();
+    private Map<String, String> attributeName2PropertyName = new HashMap<>();
 
     /**
      * @see #newInstance(Class)
@@ -52,7 +55,8 @@ public class JaxbUnmarshaller {
                 continue;
             }
 
-            bean.setPropertyValue(attr.getName(), attr.getValue());
+            String propertyName = resolvePropertyName(attr.getName());
+            bean.setPropertyValue(propertyName, attr.getValue());
         }
 
         return instance;
@@ -75,12 +79,26 @@ public class JaxbUnmarshaller {
         }
     }
 
+    private String resolvePropertyName(String attributeName) {
+        String propertyName = attributeName2PropertyName.get(attributeName);
+
+        return propertyName != null ? propertyName : attributeName;
+    }
+
     public static JaxbUnmarshaller newInstance(Class<?> type) throws NoSuchMethodException {
         JaxbUnmarshaller unmarshaller = new JaxbUnmarshaller();
 
         String localName = Introspector.decapitalize(type.getSimpleName());
         Constructor constructor = type.getDeclaredConstructor();
         unmarshaller.localName2Constructor.put(localName, constructor);
+
+        for (Field field : type.getDeclaredFields()) {
+            XmlAttribute xmlAttribute = field.getAnnotation(XmlAttribute.class);
+            String attributeName = xmlAttribute.name();
+            if (!attributeName.equals("##default")) {
+                unmarshaller.attributeName2PropertyName.put(attributeName, field.getName());
+            }
+        }
 
         return unmarshaller;
     }

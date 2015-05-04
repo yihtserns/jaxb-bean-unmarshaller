@@ -32,7 +32,7 @@ import org.xml.sax.InputSource;
 public class JaxbUnmarshallerTest {
 
     @Test
-    public void testSomeMethod() throws Exception {
+    public void canUnmarshalSingleObject() throws Exception {
         JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\"/>";
@@ -42,7 +42,7 @@ public class JaxbUnmarshallerTest {
     }
 
     @Test
-    public void testSomeMethod2() throws Exception {
+    public void canUnmarshalAttribute() throws Exception {
         JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
@@ -51,6 +51,18 @@ public class JaxbUnmarshallerTest {
         JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
         assertThat(result.getCount(), is(3));
+    }
+
+    @Test
+    public void canUnmarshalAttributeWithCustomName() throws Exception {
+        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
+                + " displayName=\"JAXB\""
+                + "/>";
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        assertThat(result.getId(), is("JAXB"));
     }
 
     private static Element toElement(String xml) throws Exception {
@@ -64,8 +76,18 @@ public class JaxbUnmarshallerTest {
     @XmlRootElement(namespace = "http://example.com/jaxb")
     private static final class JaxbObject {
 
+        @XmlAttribute(name = "displayName")
+        private String id;
         @XmlAttribute
         private Integer count;
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
 
         public Integer getCount() {
             return count;
