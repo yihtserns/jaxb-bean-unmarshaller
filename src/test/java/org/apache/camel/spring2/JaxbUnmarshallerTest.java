@@ -16,12 +16,16 @@
 package org.apache.camel.spring2;
 
 import java.io.StringReader;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.Test;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
@@ -30,6 +34,9 @@ import org.xml.sax.InputSource;
  * @author yihtserns
  */
 public class JaxbUnmarshallerTest {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void canUnmarshalSingleObject() throws Exception {
@@ -42,7 +49,7 @@ public class JaxbUnmarshallerTest {
     }
 
     @Test
-    public void canUnmarshalAttribute() throws Exception {
+    public void canUnmarshalFieldAttribute() throws Exception {
         JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
@@ -54,7 +61,7 @@ public class JaxbUnmarshallerTest {
     }
 
     @Test
-    public void canUnmarshalAttributeWithCustomName() throws Exception {
+    public void canUnmarshalFieldAttributeWithCustomName() throws Exception {
         JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
@@ -63,6 +70,66 @@ public class JaxbUnmarshallerTest {
         JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
         assertThat(result.getId(), is("JAXB"));
+    }
+
+    @Test
+    public void canUnmarshalParentAttribute() throws Exception {
+        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
+                + " duration=\"100\""
+                + "/>";
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        assertThat(result.getLength(), is(100L));
+    }
+
+    @Test
+    public void canUnmarshalSetterAttribute() throws Exception {
+        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
+                + " valid=\"true\""
+                + "/>";
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        assertThat(result.isValid(), is(true));
+    }
+
+    @Test
+    public void canUnmarshalGetterAttribute() throws Exception {
+        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
+                + " description=\"JAXB Object\""
+                + "/>";
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        assertThat(result.getDescription(), is("JAXB Object"));
+    }
+
+    @Test
+    public void canUnmarshalSetterAttributeWithCustomName() throws Exception {
+        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
+                + " skip=\"true\""
+                + "/>";
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        assertThat(result.isIgnore(), is(true));
+    }
+
+    @Test
+    public void canUnmarshalGetterAttributeWithCustomName() throws Exception {
+        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
+                + " executable=\"false\""
+                + "/>";
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        assertThat(result.isRunnable(), is(false));
     }
 
     private static Element toElement(String xml) throws Exception {
@@ -74,7 +141,7 @@ public class JaxbUnmarshallerTest {
     }
 
     @XmlRootElement(namespace = "http://example.com/jaxb")
-    private static final class JaxbObject {
+    private static final class JaxbObject extends JaxbParent {
 
         @XmlAttribute(name = "displayName")
         private String id;
@@ -96,5 +163,66 @@ public class JaxbUnmarshallerTest {
         public void setCount(Integer count) {
             this.count = count;
         }
+    }
+
+    @XmlAccessorType(XmlAccessType.FIELD)
+    private static class JaxbParent extends JaxbParent2 {
+
+        @XmlAttribute(name = "duration")
+        private Long length;
+
+        public Long getLength() {
+            return length;
+        }
+
+        public void setLength(Long length) {
+            this.length = length;
+        }
+    }
+
+    @XmlAccessorType(XmlAccessType.PROPERTY)
+    private static class JaxbParent2 {
+
+        private Boolean validity;
+        private String comment;
+        private Boolean ignore;
+        private Boolean runnable;
+
+        @XmlAttribute
+        public Boolean isValid() {
+            return validity;
+        }
+
+        public void setValid(Boolean valid) {
+            this.validity = valid;
+        }
+
+        public String getDescription() {
+            return comment;
+        }
+
+        @XmlAttribute
+        public void setDescription(String comment) {
+            this.comment = comment;
+        }
+
+        public Boolean isIgnore() {
+            return ignore;
+        }
+
+        @XmlAttribute(name = "skip")
+        public void setIgnore(Boolean ignore) {
+            this.ignore = ignore;
+        }
+
+        @XmlAttribute(name = "executable")
+        public Boolean isRunnable() {
+            return runnable;
+        }
+
+        public void setRunnable(Boolean runnable) {
+            this.runnable = runnable;
+        }
+
     }
 }

@@ -19,8 +19,10 @@ import java.beans.Introspector;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
@@ -92,14 +94,50 @@ public class JaxbUnmarshaller {
         Constructor constructor = type.getDeclaredConstructor();
         unmarshaller.localName2Constructor.put(localName, constructor);
 
-        for (Field field : type.getDeclaredFields()) {
-            XmlAttribute xmlAttribute = field.getAnnotation(XmlAttribute.class);
-            String attributeName = xmlAttribute.name();
-            if (!attributeName.equals("##default")) {
-                unmarshaller.attributeName2PropertyName.put(attributeName, field.getName());
+        Class<?> jaxbType = type;
+        while (jaxbType != Object.class) {
+            XmlAccessorType xmlAccessorType = jaxbType.getAnnotation(XmlAccessorType.class);
+            switch (xmlAccessorType.value()) {
+                case FIELD:
+                    for (Field field : jaxbType.getDeclaredFields()) {
+                        XmlAttribute xmlAttribute = field.getAnnotation(XmlAttribute.class);
+                        String attributeName = xmlAttribute.name();
+                        if (!attributeName.equals("##default")) {
+                            unmarshaller.attributeName2PropertyName.put(attributeName, field.getName());
+                        }
+                    }
+                    break;
+                case PROPERTY:
+                    for (Method method : jaxbType.getDeclaredMethods()) {
+                        XmlAttribute xmlAttribute = method.getAnnotation(XmlAttribute.class);
+                        if (xmlAttribute == null) {
+                            continue;
+                        }
+                        String attributeName = xmlAttribute.name();
+                        if (!attributeName.equals("##default")) {
+                            unmarshaller.attributeName2PropertyName.put(attributeName, getPropertyName(method));
+                        }
+                    }
+                    break;
+                default:
+                    throw new UnsupportedOperationException("XML Access Type not supported yet: " + xmlAccessorType.value());
             }
+
+            jaxbType = jaxbType.getSuperclass();
         }
 
         return unmarshaller;
+    }
+
+    private static String getPropertyName(Method method) {
+        String propertyName = method.getName();
+        if (propertyName.startsWith("is")) {
+            propertyName = propertyName.substring(2);
+        } else {
+            // Assume is setXXX/getXXX
+            propertyName = propertyName.substring(3);
+        }
+
+        return Introspector.decapitalize(propertyName);
     }
 }
