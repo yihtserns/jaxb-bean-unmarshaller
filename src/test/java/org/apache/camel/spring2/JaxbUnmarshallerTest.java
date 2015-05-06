@@ -172,8 +172,26 @@ public class JaxbUnmarshallerTest {
     }
 
     @Test
-    public void canUnmarshal() {
+    public void canUnmarshalChildElementWithParentAttributes() throws Exception {
+        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
 
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <child"
+                + "    duration=\"200\""
+                + "    valid=\"true\""
+                + "    description=\"A Child Element\""
+                + "    skip=\"false\""
+                + "    executable=\"true\""
+                + "  />\n"
+                + "</jaxbObject>";
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        JaxbChild child = result.getChild();
+        assertThat(child.getLength(), is(200L));
+        assertThat(child.isValid(), is(true));
+        assertThat(child.getDescription(), is("A Child Element"));
+        assertThat(child.isIgnore(), is(false));
+        assertThat(child.isRunnable(), is(true));
     }
 
     private static Element toElement(String xml) throws Exception {
@@ -280,7 +298,7 @@ public class JaxbUnmarshallerTest {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    private static final class JaxbChild {
+    private static final class JaxbChild extends JaxbParent {
 
         @XmlAttribute
         private String name;
