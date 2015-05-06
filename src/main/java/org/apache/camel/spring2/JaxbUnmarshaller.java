@@ -39,18 +39,19 @@ import org.w3c.dom.NodeList;
  */
 public class JaxbUnmarshaller {
 
-    private Map<String, Constructor> localName2Constructor = new HashMap<>();
     private Map<String, String> attributeName2PropertyName = new HashMap<>();
+    private Map<String, JaxbUnmarshaller> localName2Unmarshaller = new HashMap<>();
+    private Constructor constructor;
 
     /**
      * @see #newInstance(Class)
      */
-    private JaxbUnmarshaller() {
+    private JaxbUnmarshaller(Constructor constructor) {
+        this.constructor = constructor;
     }
 
     public Object unmarshal(Element element) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        String localName = element.getLocalName();
-        Object instance = newInstanceForLocalName(localName);
+        Object instance = newInstance();
         BeanWrapper bean = PropertyAccessorFactory.forBeanPropertyAccess(instance);
 
         NamedNodeMap attributes = element.getAttributes();
@@ -70,10 +71,12 @@ public class JaxbUnmarshaller {
                 continue;
             }
             Element childElement = (Element) item;
-            Object childInstance = unmarshal(childElement);
-            
-            String propertyName = item.getLocalName();
-            bean.setPropertyValue(propertyName, childInstance);
+            String localName = item.getLocalName();
+
+            JaxbUnmarshaller childUnmarshaller = localName2Unmarshaller.get(localName);
+            Object childInstance = childUnmarshaller.unmarshal(childElement);
+
+            bean.setPropertyValue(localName, childInstance);
         }
 
         return instance;
@@ -85,8 +88,7 @@ public class JaxbUnmarshaller {
         return fullName.equals("xmlns") || fullName.startsWith("xmlns:");
     }
 
-    private Object newInstanceForLocalName(String localName) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        Constructor constructor = localName2Constructor.get(localName);
+    private Object newInstance() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         boolean originalAccessibility = constructor.isAccessible();
         try {
             constructor.setAccessible(true);
@@ -103,10 +105,7 @@ public class JaxbUnmarshaller {
     }
 
     public static JaxbUnmarshaller newInstance(Class<?> type) throws NoSuchMethodException {
-        JaxbUnmarshaller unmarshaller = new JaxbUnmarshaller();
-
-        String localName = Introspector.decapitalize(type.getSimpleName());
-        unmarshaller.localName2Constructor.put(localName, type.getDeclaredConstructor());
+        JaxbUnmarshaller unmarshaller = new JaxbUnmarshaller(type.getDeclaredConstructor());
 
         Class<?> jaxbType = type;
         while (jaxbType != Object.class) {
@@ -122,7 +121,8 @@ public class JaxbUnmarshaller {
                                 unmarshaller.attributeName2PropertyName.put(attributeName, field.getName());
                             }
                         } else if (field.isAnnotationPresent(XmlElement.class)) {
-                            unmarshaller.localName2Constructor.put(field.getName(), field.getType().getDeclaredConstructor());
+                            JaxbUnmarshaller childUnmarshaller = newInstance(field.getType());
+                            unmarshaller.localName2Unmarshaller.put(field.getName(), childUnmarshaller);
                         }
                     }
                     break;

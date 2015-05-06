@@ -145,6 +145,37 @@ public class JaxbUnmarshallerTest {
         assertThat(result.getChild(), is(notNullValue()));
     }
 
+    @Test
+    public void canUnmarshalSingleElementWithFieldAttribute() throws Exception {
+        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <child name=\"A Child\"/>\n"
+                + "</jaxbObject>";
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        JaxbChild child = result.getChild();
+        assertThat(child.getName(), is("A Child"));
+    }
+
+    @Test
+    public void canUnmarshalSingleElementWithFieldAttributeWithCustomName() throws Exception {
+        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <child counter=\"100\"/>\n"
+                + "</jaxbObject>";
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        JaxbChild child = result.getChild();
+        assertThat(child.getCount(), is(100L));
+    }
+
+    @Test
+    public void canUnmarshal() {
+
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -248,7 +279,28 @@ public class JaxbUnmarshallerTest {
         }
     }
 
+    @XmlAccessorType(XmlAccessType.FIELD)
     private static final class JaxbChild {
 
+        @XmlAttribute
+        private String name;
+        @XmlAttribute(name = "counter")
+        private Long count;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public Long getCount() {
+            return count;
+        }
+
+        public void setCount(Long count) {
+            this.count = count;
+        }
     }
 }
