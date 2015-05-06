@@ -24,11 +24,14 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  *
@@ -59,6 +62,18 @@ public class JaxbUnmarshaller {
 
             String propertyName = resolvePropertyName(attr.getName());
             bean.setPropertyValue(propertyName, attr.getValue());
+        }
+        NodeList childNodes = element.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node item = childNodes.item(i);
+            if (item.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            Element childElement = (Element) item;
+            Object childInstance = unmarshal(childElement);
+            
+            String propertyName = item.getLocalName();
+            bean.setPropertyValue(propertyName, childInstance);
         }
 
         return instance;
@@ -91,8 +106,7 @@ public class JaxbUnmarshaller {
         JaxbUnmarshaller unmarshaller = new JaxbUnmarshaller();
 
         String localName = Introspector.decapitalize(type.getSimpleName());
-        Constructor constructor = type.getDeclaredConstructor();
-        unmarshaller.localName2Constructor.put(localName, constructor);
+        unmarshaller.localName2Constructor.put(localName, type.getDeclaredConstructor());
 
         Class<?> jaxbType = type;
         while (jaxbType != Object.class) {
@@ -100,10 +114,15 @@ public class JaxbUnmarshaller {
             switch (xmlAccessorType.value()) {
                 case FIELD:
                     for (Field field : jaxbType.getDeclaredFields()) {
-                        XmlAttribute xmlAttribute = field.getAnnotation(XmlAttribute.class);
-                        String attributeName = xmlAttribute.name();
-                        if (!attributeName.equals("##default")) {
-                            unmarshaller.attributeName2PropertyName.put(attributeName, field.getName());
+                        if (field.isAnnotationPresent(XmlAttribute.class)) {
+                            XmlAttribute xmlAttribute = field.getAnnotation(XmlAttribute.class);
+
+                            String attributeName = xmlAttribute.name();
+                            if (!attributeName.equals("##default")) {
+                                unmarshaller.attributeName2PropertyName.put(attributeName, field.getName());
+                            }
+                        } else if (field.isAnnotationPresent(XmlElement.class)) {
+                            unmarshaller.localName2Constructor.put(field.getName(), field.getType().getDeclaredConstructor());
                         }
                     }
                     break;

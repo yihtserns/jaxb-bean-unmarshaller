@@ -19,6 +19,7 @@ import java.io.StringReader;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.Test;
@@ -132,6 +133,18 @@ public class JaxbUnmarshallerTest {
         assertThat(result.isRunnable(), is(false));
     }
 
+    @Test
+    public void canUnmarshalSingleElement() throws Exception {
+        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <child/>\n"
+                + "</jaxbObject>";
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        assertThat(result.getChild(), is(notNullValue()));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -147,6 +160,8 @@ public class JaxbUnmarshallerTest {
         private String id;
         @XmlAttribute
         private Integer count;
+        @XmlElement
+        private JaxbChild child;
 
         public String getId() {
             return id;
@@ -162,6 +177,14 @@ public class JaxbUnmarshallerTest {
 
         public void setCount(Integer count) {
             this.count = count;
+        }
+
+        public JaxbChild getChild() {
+            return child;
+        }
+
+        public void setChild(JaxbChild child) {
+            this.child = child;
         }
     }
 
@@ -223,6 +246,9 @@ public class JaxbUnmarshallerTest {
         public void setRunnable(Boolean runnable) {
             this.runnable = runnable;
         }
+    }
+
+    private static final class JaxbChild {
 
     }
 }
