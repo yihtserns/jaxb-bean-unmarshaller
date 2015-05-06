@@ -34,14 +34,14 @@ import org.xml.sax.InputSource;
 /**
  * @author yihtserns
  */
-public class JaxbUnmarshallerTest {
+public class JaxbBeanUnmarshallerTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void canUnmarshalSingleObject() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\"/>";
         JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
@@ -51,7 +51,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalFieldAttribute() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " count=\"3\""
@@ -63,7 +63,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalFieldAttributeWithCustomName() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " displayName=\"JAXB\""
@@ -75,7 +75,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalParentAttribute() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " duration=\"100\""
@@ -87,7 +87,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalSetterAttribute() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " valid=\"true\""
@@ -99,7 +99,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalGetterAttribute() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " description=\"JAXB Object\""
@@ -111,7 +111,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalSetterAttributeWithCustomName() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " skip=\"true\""
@@ -123,7 +123,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalGetterAttributeWithCustomName() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " executable=\"false\""
@@ -135,7 +135,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalChildElement() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <child/>\n"
@@ -147,7 +147,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalChildElementWithFieldAttribute() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <child name=\"A Child\"/>\n"
@@ -160,7 +160,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalChildElementWithFieldAttributeWithCustomName() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <child counter=\"100\"/>\n"
@@ -173,7 +173,7 @@ public class JaxbUnmarshallerTest {
 
     @Test
     public void canUnmarshalChildElementWithParentAttributes() throws Exception {
-        JaxbUnmarshaller unmarshaller = JaxbUnmarshaller.newInstance(JaxbObject.class);
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <child"

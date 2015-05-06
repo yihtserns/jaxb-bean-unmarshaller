@@ -37,16 +37,16 @@ import org.w3c.dom.NodeList;
  *
  * @author yihtserns
  */
-public class JaxbUnmarshaller {
+public class JaxbBeanUnmarshaller {
 
-    private Map<String, String> attributeName2PropertyName = new HashMap<>();
-    private Map<String, JaxbUnmarshaller> localName2Unmarshaller = new HashMap<>();
+    private Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
+    private Map<String, JaxbBeanUnmarshaller> localName2Unmarshaller = new HashMap<String, JaxbBeanUnmarshaller>();
     private Constructor constructor;
 
     /**
      * @see #newInstance(Class)
      */
-    private JaxbUnmarshaller(Constructor constructor) {
+    private JaxbBeanUnmarshaller(Constructor constructor) {
         this.constructor = constructor;
     }
 
@@ -73,7 +73,7 @@ public class JaxbUnmarshaller {
             Element childElement = (Element) item;
             String localName = item.getLocalName();
 
-            JaxbUnmarshaller childUnmarshaller = localName2Unmarshaller.get(localName);
+            JaxbBeanUnmarshaller childUnmarshaller = localName2Unmarshaller.get(localName);
             Object childInstance = childUnmarshaller.unmarshal(childElement);
 
             bean.setPropertyValue(localName, childInstance);
@@ -104,8 +104,8 @@ public class JaxbUnmarshaller {
         return propertyName != null ? propertyName : attributeName;
     }
 
-    public static JaxbUnmarshaller newInstance(Class<?> type) throws NoSuchMethodException {
-        JaxbUnmarshaller unmarshaller = new JaxbUnmarshaller(type.getDeclaredConstructor());
+    public static JaxbBeanUnmarshaller newInstance(Class<?> type) throws NoSuchMethodException {
+        JaxbBeanUnmarshaller unmarshaller = new JaxbBeanUnmarshaller(type.getDeclaredConstructor());
 
         Class<?> jaxbType = type;
         while (jaxbType != Object.class) {
@@ -121,7 +121,7 @@ public class JaxbUnmarshaller {
                                 unmarshaller.attributeName2PropertyName.put(attributeName, field.getName());
                             }
                         } else if (field.isAnnotationPresent(XmlElement.class)) {
-                            JaxbUnmarshaller childUnmarshaller = newInstance(field.getType());
+                            JaxbBeanUnmarshaller childUnmarshaller = newInstance(field.getType());
                             unmarshaller.localName2Unmarshaller.put(field.getName(), childUnmarshaller);
                         }
                     }
