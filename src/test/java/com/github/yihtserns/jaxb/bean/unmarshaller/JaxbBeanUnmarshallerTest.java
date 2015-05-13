@@ -15,12 +15,12 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
-import com.github.yihtserns.jaxb.bean.unmarshaller.JaxbBeanUnmarshaller;
 import java.io.StringReader;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.Test;
@@ -195,6 +195,20 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(child.isRunnable(), is(true));
     }
 
+    @Test
+    public void canUnmarshalChildRootElement() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class, JaxbObject2.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <jaxbObject2 valid=\"true\"/>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+
+        JaxbObject2 globalChild = result.getGlobalChild();
+        assertThat(globalChild.isValid(), is(true));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -212,6 +226,8 @@ public class JaxbBeanUnmarshallerTest {
         private Integer count;
         @XmlElement
         private JaxbChild child;
+        @XmlElementRef
+        private JaxbObject2 globalChild;
 
         public String getId() {
             return id;
@@ -235,6 +251,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setChild(JaxbChild child) {
             this.child = child;
+        }
+
+        public JaxbObject2 getGlobalChild() {
+            return globalChild;
+        }
+
+        public void setGlobalChild(JaxbObject2 globalChild) {
+            this.globalChild = globalChild;
         }
     }
 
@@ -321,5 +345,10 @@ public class JaxbBeanUnmarshallerTest {
         public void setCount(Long count) {
             this.count = count;
         }
+    }
+
+    @XmlRootElement
+    private static final class JaxbObject2 extends JaxbParent {
+
     }
 }
