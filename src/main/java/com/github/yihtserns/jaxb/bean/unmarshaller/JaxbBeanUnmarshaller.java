@@ -83,35 +83,32 @@ public class JaxbBeanUnmarshaller {
     }
 
     private void init(BeanUnmarshaller unmarshaller, Class<?> type) throws NoSuchMethodException {
-        Class<?> jaxbType = type;
-        while (jaxbType != Object.class) {
-            XmlAccessorType xmlAccessorType = jaxbType.getAnnotation(XmlAccessorType.class);
-            switch (xmlAccessorType.value()) {
-                case FIELD:
-                    for (Field field : jaxbType.getDeclaredFields()) {
-                        if (field.isAnnotationPresent(XmlAttribute.class)) {
-                            unmarshaller.addAttribute(field);
-                        } else if (field.isAnnotationPresent(XmlElement.class)) {
-                            unmarshaller.addElement(field);
-                        } else if (field.isAnnotationPresent(XmlElementRef.class)) {
-                            unmarshaller.addElementRef(field);
-                        }
-                    }
-                    break;
-                case PROPERTY:
-                    for (Method method : jaxbType.getDeclaredMethods()) {
-                        if (method.isAnnotationPresent(XmlAttribute.class)) {
-                            unmarshaller.addAttribute(method);
-                        } else if (method.isAnnotationPresent(XmlElement.class)) {
-                            unmarshaller.addElement(method);
-                        }
-                    }
-                    break;
-                default:
-                    throw new UnsupportedOperationException("XML Access Type not supported yet: " + xmlAccessorType.value());
+        while (type != Object.class) {
+            XmlAccessorType xmlAccessorType = type.getAnnotation(XmlAccessorType.class);
+            Resolver resolver = getResolverFor(xmlAccessorType);
+
+            for (AccessibleObject accObj : resolver.getDirectMembers(type)) {
+                if (accObj.isAnnotationPresent(XmlAttribute.class)) {
+                    unmarshaller.addAttribute(accObj, resolver);
+                } else if (accObj.isAnnotationPresent(XmlElement.class)) {
+                    unmarshaller.addElement(accObj, resolver);
+                } else if (accObj.isAnnotationPresent(XmlElementRef.class)) {
+                    unmarshaller.addElementRef(accObj, resolver);
+                }
             }
 
-            jaxbType = jaxbType.getSuperclass();
+            type = type.getSuperclass();
+        }
+    }
+
+    private Resolver getResolverFor(XmlAccessorType xmlAccessorType) throws UnsupportedOperationException {
+        switch (xmlAccessorType.value()) {
+            case FIELD:
+                return Resolver.FIELD;
+            case PROPERTY:
+                return Resolver.METHOD;
+            default:
+                throw new UnsupportedOperationException("XML Access Type not supported yet: " + xmlAccessorType.value());
         }
     }
 
@@ -123,18 +120,6 @@ public class JaxbBeanUnmarshaller {
         jaxbBeanUnmarshaller.init();
 
         return jaxbBeanUnmarshaller;
-    }
-
-    private static String getPropertyName(Method method) {
-        String propertyName = method.getName();
-        if (propertyName.startsWith("is")) {
-            propertyName = propertyName.substring(2);
-        } else {
-            // Assume is setXXX/getXXX
-            propertyName = propertyName.substring(3);
-        }
-
-        return Introspector.decapitalize(propertyName);
     }
 
     private static String resolveRootElementName(Class type) {
@@ -186,51 +171,33 @@ public class JaxbBeanUnmarshaller {
             return instance;
         }
 
-        public void addAttribute(Field field) {
-            addAttribute(field, field.getName());
-        }
+        public <T extends AccessibleObject> void addAttribute(T accObj, Resolver<T> resolver) {
+            String propertyName = resolver.getPropertyName(accObj);
 
-        public void addAttribute(Method method) {
-            addAttribute(method, getPropertyName(method));
-        }
-
-        private void addAttribute(AccessibleObject accObj, String propertyName) {
-            XmlAttribute xmlAttribute = accObj.getAnnotation(XmlAttribute.class);
-
-            String attributeName = xmlAttribute.name();
+            String attributeName = accObj.getAnnotation(XmlAttribute.class).name();
             if (!attributeName.equals(AUTO_GENERATED_NAME)) {
                 attributeName2PropertyName.put(attributeName, propertyName);
             }
         }
 
-        public void addElement(Method method) throws NoSuchMethodException {
-            Class<?> childType = method.getName().startsWith("set")
-                    ? method.getParameterTypes()[0]
-                    : method.getReturnType();
-            addElement(method, getPropertyName(method), childType);
-        }
+        public <T extends AccessibleObject> void addElement(T accObj, Resolver<T> resolver) throws NoSuchMethodException {
+            String propertyName = resolver.getPropertyName(accObj);
+            Class<?> type = resolver.getPropertyType(accObj);
 
-        private void addElement(Field field) throws NoSuchMethodException {
-            addElement(field, field.getName(), field.getType());
-        }
-
-        private void addElement(AccessibleObject accObj, String propertyName, Class<?> type) throws NoSuchMethodException {
-            BeanUnmarshaller childUnmarshaller = getUnmarshallerForType(type);
-
-            XmlElement xmlElement = accObj.getAnnotation(XmlElement.class);
-            String elementName = xmlElement.name();
+            String elementName = accObj.getAnnotation(XmlElement.class).name();
             if (elementName.equals(AUTO_GENERATED_NAME)) {
                 elementName = propertyName;
             } else {
                 elementName2PropertyName.put(elementName, propertyName);
             }
 
+            BeanUnmarshaller childUnmarshaller = getUnmarshallerForType(type);
             localName2Unmarshaller.put(elementName, childUnmarshaller);
         }
 
-        public void addElementRef(Field field) {
-            String globalName = resolveRootElementName(field.getType());
-            elementName2PropertyName.put(globalName, field.getName());
+        public <T extends AccessibleObject> void addElementRef(T accObj, Resolver<T> resolver) {
+            String globalName = resolveRootElementName(resolver.getPropertyType(accObj));
+            elementName2PropertyName.put(globalName, resolver.getPropertyName(accObj));
         }
 
         private boolean isNamespaceDeclaration(Attr attr) {
@@ -261,5 +228,60 @@ public class JaxbBeanUnmarshaller {
 
             return propertyName != null ? propertyName : elementName;
         }
+    }
+
+    private static abstract class Resolver<T extends AccessibleObject> {
+
+        public static final Resolver<Method> METHOD = new Resolver<Method>() {
+
+            @Override
+            public AccessibleObject[] getDirectMembers(Class<?> type) {
+                return type.getDeclaredMethods();
+            }
+
+            public String getPropertyName(Method method) {
+                String propertyName = method.getName();
+                if (propertyName.startsWith("is")) {
+                    propertyName = propertyName.substring(2);
+                } else {
+                    // Assume is setXXX/getXXX
+                    propertyName = propertyName.substring(3);
+                }
+
+                return Introspector.decapitalize(propertyName);
+            }
+
+            public Class<?> getPropertyType(Method method) {
+                if (method.getName().startsWith("set")) {
+                    return method.getParameterTypes()[0];
+                }
+
+                // Assume is isXXX/getXXX
+                return method.getReturnType();
+            }
+
+        };
+
+        private static final Resolver<Field> FIELD = new Resolver<Field>() {
+
+            @Override
+            public AccessibleObject[] getDirectMembers(Class<?> type) {
+                return type.getDeclaredFields();
+            }
+
+            public String getPropertyName(Field field) {
+                return field.getName();
+            }
+
+            public Class<?> getPropertyType(Field field) {
+                return field.getType();
+            }
+        };
+
+        public abstract AccessibleObject[] getDirectMembers(Class<?> type);
+
+        public abstract String getPropertyName(T t);
+
+        public abstract Class<?> getPropertyType(T t);
     }
 }
