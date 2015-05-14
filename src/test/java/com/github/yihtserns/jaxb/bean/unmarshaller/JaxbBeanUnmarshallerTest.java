@@ -221,6 +221,18 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(result.getNamedChild().isValid(), is(true));
     }
 
+    @Test
+    public void canUnmarshalParentChildElement() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <parentChild valid=\"true\"/>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getParentChild().isValid(), is(true));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -289,6 +301,8 @@ public class JaxbBeanUnmarshallerTest {
 
         @XmlAttribute(name = "duration")
         private Long length;
+        @XmlElement
+        private JaxbChild parentChild;
 
         public Long getLength() {
             return length;
@@ -296,6 +310,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setLength(Long length) {
             this.length = length;
+        }
+
+        public JaxbChild getParentChild() {
+            return parentChild;
+        }
+
+        public void setParentChild(JaxbChild parentChild) {
+            this.parentChild = parentChild;
         }
     }
 

@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -42,6 +43,7 @@ public class JaxbBeanUnmarshaller {
 
     private static final String AUTO_GENERATED_NAME = "##default";
     private Map<String, BeanUnmarshaller> globalName2Unmarshaller = new HashMap<String, BeanUnmarshaller>();
+    private Map<Class<?>, BeanUnmarshaller> type2Unmarshaller = new HashMap<Class<?>, BeanUnmarshaller>();
 
     /**
      * @see #newInstance(java.lang.Class...)
@@ -56,21 +58,30 @@ public class JaxbBeanUnmarshaller {
         return unmarshaller.unmarshal(element);
     }
 
-    public static JaxbBeanUnmarshaller newInstance(Class<?>... types) throws NoSuchMethodException {
-        JaxbBeanUnmarshaller jaxbBeanUnmarshaller = new JaxbBeanUnmarshaller();
-        for (Class<?> type : types) {
-            String elementName = resolveRootElementName(type);
-            BeanUnmarshaller unmarshaller = jaxbBeanUnmarshaller.newInstance(type);
+    private void addGlobalType(Class<?> type) throws NoSuchMethodException {
+        String elementName = resolveRootElementName(type);
+        BeanUnmarshaller unmarshaller = new BeanUnmarshaller(type.getDeclaredConstructor());
+        init(unmarshaller, type);
 
-            jaxbBeanUnmarshaller.globalName2Unmarshaller.put(elementName, unmarshaller);
-        }
-
-        return jaxbBeanUnmarshaller;
+        globalName2Unmarshaller.put(elementName, unmarshaller);
     }
 
-    private BeanUnmarshaller newInstance(Class<?> type) throws NoSuchMethodException {
-        BeanUnmarshaller unmarshaller = new BeanUnmarshaller(type.getDeclaredConstructor());
+    private void init() throws NoSuchMethodException {
+        for (Entry<Class<?>, BeanUnmarshaller> entry : type2Unmarshaller.entrySet()) {
+            init(entry.getValue(), entry.getKey());
+        }
+    }
 
+    private BeanUnmarshaller getUnmarshallerForType(Class<?> type) throws NoSuchMethodException {
+        BeanUnmarshaller unmarshaller = type2Unmarshaller.get(type);
+        if (unmarshaller == null) {
+            unmarshaller = new BeanUnmarshaller(type.getDeclaredConstructor());
+            type2Unmarshaller.put(type, unmarshaller);
+        }
+        return unmarshaller;
+    }
+
+    private void init(BeanUnmarshaller unmarshaller, Class<?> type) throws NoSuchMethodException {
         Class<?> jaxbType = type;
         while (jaxbType != Object.class) {
             XmlAccessorType xmlAccessorType = jaxbType.getAnnotation(XmlAccessorType.class);
@@ -85,7 +96,7 @@ public class JaxbBeanUnmarshaller {
                                 unmarshaller.attributeName2PropertyName.put(attributeName, field.getName());
                             }
                         } else if (field.isAnnotationPresent(XmlElement.class)) {
-                            BeanUnmarshaller childUnmarshaller = newInstance(field.getType());
+                            BeanUnmarshaller childUnmarshaller = getUnmarshallerForType(field.getType());
 
                             XmlElement xmlElement = field.getAnnotation(XmlElement.class);
                             String propertyName = field.getName();
@@ -121,8 +132,16 @@ public class JaxbBeanUnmarshaller {
 
             jaxbType = jaxbType.getSuperclass();
         }
+    }
 
-        return unmarshaller;
+    public static JaxbBeanUnmarshaller newInstance(Class<?>... types) throws NoSuchMethodException {
+        JaxbBeanUnmarshaller jaxbBeanUnmarshaller = new JaxbBeanUnmarshaller();
+        for (Class<?> type : types) {
+            jaxbBeanUnmarshaller.addGlobalType(type);
+        }
+        jaxbBeanUnmarshaller.init();
+
+        return jaxbBeanUnmarshaller;
     }
 
     private static String getPropertyName(Method method) {
