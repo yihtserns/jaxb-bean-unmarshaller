@@ -86,7 +86,17 @@ public class JaxbBeanUnmarshaller {
                             }
                         } else if (field.isAnnotationPresent(XmlElement.class)) {
                             BeanUnmarshaller childUnmarshaller = newInstance(field.getType());
-                            unmarshaller.localName2Unmarshaller.put(field.getName(), childUnmarshaller);
+
+                            XmlElement xmlElement = field.getAnnotation(XmlElement.class);
+                            String propertyName = field.getName();
+                            String elementName = xmlElement.name();
+                            if (elementName.equals(AUTO_GENERATED_NAME)) {
+                                elementName = field.getName();
+                            } else {
+                                unmarshaller.elementName2PropertyName.put(elementName, propertyName);
+                            }
+
+                            unmarshaller.localName2Unmarshaller.put(elementName, childUnmarshaller);
                         } else if (field.isAnnotationPresent(XmlElementRef.class)) {
                             String globalName = resolveRootElementName(field.getType());
                             unmarshaller.elementName2PropertyName.put(globalName, field.getName());
