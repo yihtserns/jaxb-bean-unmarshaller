@@ -16,6 +16,7 @@
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
 import java.beans.Introspector;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -89,55 +90,20 @@ public class JaxbBeanUnmarshaller {
                 case FIELD:
                     for (Field field : jaxbType.getDeclaredFields()) {
                         if (field.isAnnotationPresent(XmlAttribute.class)) {
-                            XmlAttribute xmlAttribute = field.getAnnotation(XmlAttribute.class);
-
-                            String attributeName = xmlAttribute.name();
-                            if (!attributeName.equals(AUTO_GENERATED_NAME)) {
-                                unmarshaller.attributeName2PropertyName.put(attributeName, field.getName());
-                            }
+                            unmarshaller.addAttribute(field);
                         } else if (field.isAnnotationPresent(XmlElement.class)) {
-                            BeanUnmarshaller childUnmarshaller = getUnmarshallerForType(field.getType());
-
-                            XmlElement xmlElement = field.getAnnotation(XmlElement.class);
-                            String propertyName = field.getName();
-                            String elementName = xmlElement.name();
-                            if (elementName.equals(AUTO_GENERATED_NAME)) {
-                                elementName = field.getName();
-                            } else {
-                                unmarshaller.elementName2PropertyName.put(elementName, propertyName);
-                            }
-
-                            unmarshaller.localName2Unmarshaller.put(elementName, childUnmarshaller);
+                            unmarshaller.addElement(field);
                         } else if (field.isAnnotationPresent(XmlElementRef.class)) {
-                            String globalName = resolveRootElementName(field.getType());
-                            unmarshaller.elementName2PropertyName.put(globalName, field.getName());
+                            unmarshaller.addElementRef(field);
                         }
                     }
                     break;
                 case PROPERTY:
                     for (Method method : jaxbType.getDeclaredMethods()) {
                         if (method.isAnnotationPresent(XmlAttribute.class)) {
-                            XmlAttribute xmlAttribute = method.getAnnotation(XmlAttribute.class);
-                            String attributeName = xmlAttribute.name();
-                            if (!attributeName.equals(AUTO_GENERATED_NAME)) {
-                                unmarshaller.attributeName2PropertyName.put(attributeName, getPropertyName(method));
-                            }
+                            unmarshaller.addAttribute(method);
                         } else if (method.isAnnotationPresent(XmlElement.class)) {
-                            Class<?> childType = method.getName().startsWith("set")
-                                    ? method.getParameterTypes()[0]
-                                    : method.getReturnType();
-                            BeanUnmarshaller childUnmarshaller = getUnmarshallerForType(childType);
-
-                            XmlElement xmlElement = method.getAnnotation(XmlElement.class);
-                            String propertyName = getPropertyName(method);
-                            String elementName = xmlElement.name();
-                            if (elementName.equals(AUTO_GENERATED_NAME)) {
-                                elementName = propertyName;
-                            } else {
-                                unmarshaller.elementName2PropertyName.put(elementName, propertyName);
-                            }
-
-                            unmarshaller.localName2Unmarshaller.put(elementName, childUnmarshaller);
+                            unmarshaller.addElement(method);
                         }
                     }
                     break;
@@ -218,6 +184,53 @@ public class JaxbBeanUnmarshaller {
                 bean.setPropertyValue(propertyName, childInstance);
             }
             return instance;
+        }
+
+        public void addAttribute(Field field) {
+            addAttribute(field, field.getName());
+        }
+
+        public void addAttribute(Method method) {
+            addAttribute(method, getPropertyName(method));
+        }
+
+        private void addAttribute(AccessibleObject accObj, String propertyName) {
+            XmlAttribute xmlAttribute = accObj.getAnnotation(XmlAttribute.class);
+
+            String attributeName = xmlAttribute.name();
+            if (!attributeName.equals(AUTO_GENERATED_NAME)) {
+                attributeName2PropertyName.put(attributeName, propertyName);
+            }
+        }
+
+        public void addElement(Method method) throws NoSuchMethodException {
+            Class<?> childType = method.getName().startsWith("set")
+                    ? method.getParameterTypes()[0]
+                    : method.getReturnType();
+            addElement(method, getPropertyName(method), childType);
+        }
+
+        private void addElement(Field field) throws NoSuchMethodException {
+            addElement(field, field.getName(), field.getType());
+        }
+
+        private void addElement(AccessibleObject accObj, String propertyName, Class<?> type) throws NoSuchMethodException {
+            BeanUnmarshaller childUnmarshaller = getUnmarshallerForType(type);
+
+            XmlElement xmlElement = accObj.getAnnotation(XmlElement.class);
+            String elementName = xmlElement.name();
+            if (elementName.equals(AUTO_GENERATED_NAME)) {
+                elementName = propertyName;
+            } else {
+                elementName2PropertyName.put(elementName, propertyName);
+            }
+
+            localName2Unmarshaller.put(elementName, childUnmarshaller);
+        }
+
+        public void addElementRef(Field field) {
+            String globalName = resolveRootElementName(field.getType());
+            elementName2PropertyName.put(globalName, field.getName());
         }
 
         private boolean isNamespaceDeclaration(Attr attr) {
