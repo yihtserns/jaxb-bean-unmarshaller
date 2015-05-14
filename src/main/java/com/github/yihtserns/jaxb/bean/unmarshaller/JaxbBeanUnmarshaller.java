@@ -116,13 +116,28 @@ public class JaxbBeanUnmarshaller {
                     break;
                 case PROPERTY:
                     for (Method method : jaxbType.getDeclaredMethods()) {
-                        XmlAttribute xmlAttribute = method.getAnnotation(XmlAttribute.class);
-                        if (xmlAttribute == null) {
-                            continue;
-                        }
-                        String attributeName = xmlAttribute.name();
-                        if (!attributeName.equals("##default")) {
-                            unmarshaller.attributeName2PropertyName.put(attributeName, getPropertyName(method));
+                        if (method.isAnnotationPresent(XmlAttribute.class)) {
+                            XmlAttribute xmlAttribute = method.getAnnotation(XmlAttribute.class);
+                            String attributeName = xmlAttribute.name();
+                            if (!attributeName.equals(AUTO_GENERATED_NAME)) {
+                                unmarshaller.attributeName2PropertyName.put(attributeName, getPropertyName(method));
+                            }
+                        } else if (method.isAnnotationPresent(XmlElement.class)) {
+                            Class<?> childType = method.getName().startsWith("set")
+                                    ? method.getParameterTypes()[0]
+                                    : method.getReturnType();
+                            BeanUnmarshaller childUnmarshaller = getUnmarshallerForType(childType);
+
+                            XmlElement xmlElement = method.getAnnotation(XmlElement.class);
+                            String propertyName = getPropertyName(method);
+                            String elementName = xmlElement.name();
+                            if (elementName.equals(AUTO_GENERATED_NAME)) {
+                                elementName = propertyName;
+                            } else {
+                                unmarshaller.elementName2PropertyName.put(elementName, propertyName);
+                            }
+
+                            unmarshaller.localName2Unmarshaller.put(elementName, childUnmarshaller);
                         }
                     }
                     break;

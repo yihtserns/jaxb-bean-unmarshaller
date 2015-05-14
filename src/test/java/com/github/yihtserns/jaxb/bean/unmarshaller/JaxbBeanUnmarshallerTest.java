@@ -245,6 +245,30 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(result.getNamedParentChild().isValid(), is(true));
     }
 
+    @Test
+    public void canUnmarshalSetterElement() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <setterChild valid=\"true\"/>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getSetterChild().isValid(), is(true));
+    }
+
+    @Test
+    public void canUnmarshalGetterElement() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <getterChild valid=\"true\"/>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getGetterChild().isValid(), is(true));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -350,6 +374,8 @@ public class JaxbBeanUnmarshallerTest {
         private String comment;
         private Boolean ignore;
         private Boolean runnable;
+        private JaxbChild setterChild;
+        private JaxbChild getterChild;
 
         @XmlAttribute
         public Boolean isValid() {
@@ -385,6 +411,24 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setRunnable(Boolean runnable) {
             this.runnable = runnable;
+        }
+
+        public JaxbChild getSetterChild() {
+            return setterChild;
+        }
+
+        @XmlElement
+        public void setSetterChild(JaxbChild setterChild) {
+            this.setterChild = setterChild;
+        }
+
+        @XmlElement
+        public JaxbChild getGetterChild() {
+            return getterChild;
+        }
+
+        public void setGetterChild(JaxbChild getterChild) {
+            this.getterChild = getterChild;
         }
     }
 
