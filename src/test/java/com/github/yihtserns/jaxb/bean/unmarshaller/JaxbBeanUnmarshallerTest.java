@@ -269,6 +269,18 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(result.getGetterChild().isValid(), is(true));
     }
 
+    @Test
+    public void canUnmarshalGetterElementWithCustomName() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <setterChildWithName valid=\"true\"/>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getNamedSetterChild().isValid(), is(true));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -376,6 +388,7 @@ public class JaxbBeanUnmarshallerTest {
         private Boolean runnable;
         private JaxbChild setterChild;
         private JaxbChild getterChild;
+        private JaxbChild namedSetterChild;
 
         @XmlAttribute
         public Boolean isValid() {
@@ -429,6 +442,15 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setGetterChild(JaxbChild getterChild) {
             this.getterChild = getterChild;
+        }
+
+        public JaxbChild getNamedSetterChild() {
+            return namedSetterChild;
+        }
+
+        @XmlElement(name = "setterChildWithName")
+        public void setNamedSetterChild(JaxbChild namedSetterChild) {
+            this.namedSetterChild = namedSetterChild;
         }
     }
 
