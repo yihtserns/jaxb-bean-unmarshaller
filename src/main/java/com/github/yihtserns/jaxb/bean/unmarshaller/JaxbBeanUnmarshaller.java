@@ -21,8 +21,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -108,6 +114,7 @@ public class JaxbBeanUnmarshaller {
 
     private class BeanUnmarshaller {
 
+        Set<String> listTypeElementNames = new HashSet<String>();
         Map<String, String> elementName2PropertyName = new HashMap<String, String>();
         Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
         Map<String, BeanUnmarshaller> localName2Unmarshaller = new HashMap<String, BeanUnmarshaller>();
@@ -148,7 +155,17 @@ public class JaxbBeanUnmarshaller {
                 Object childInstance = childUnmarshaller.unmarshal(childElement);
 
                 String propertyName = resolvePropertyName(childElement);
-                bean.setPropertyValue(propertyName, childInstance);
+
+                if (listTypeElementNames.contains(localName)) {
+                    List valueList = (List) bean.getPropertyValue(propertyName);
+                    if (valueList == null) {
+                        valueList = new ArrayList();
+                        bean.setPropertyValue(propertyName, valueList);
+                    }
+                    valueList.add(childInstance);
+                } else {
+                    bean.setPropertyValue(propertyName, childInstance);
+                }
             }
             return instance;
         }
@@ -164,7 +181,6 @@ public class JaxbBeanUnmarshaller {
 
         public <T extends AccessibleObject> void addElement(T accObj, Resolver<T> resolver) throws NoSuchMethodException {
             String propertyName = resolver.getPropertyName(accObj);
-            Class<?> type = resolver.getPropertyType(accObj);
 
             String elementName = accObj.getAnnotation(XmlElement.class).name();
             if (elementName.equals(AUTO_GENERATED_NAME)) {
@@ -173,6 +189,12 @@ public class JaxbBeanUnmarshaller {
                 elementName2PropertyName.put(elementName, propertyName);
             }
 
+            Class<?> type = resolver.getPropertyType(accObj);
+            if (type == List.class) {
+                Type genericType = resolver.getGenericType(accObj);
+                type = (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+                listTypeElementNames.add(elementName);
+            }
             BeanUnmarshaller childUnmarshaller = getUnmarshallerForType(type);
             localName2Unmarshaller.put(elementName, childUnmarshaller);
         }
@@ -253,14 +275,17 @@ public class JaxbBeanUnmarshaller {
             }
 
             public Class<?> getPropertyType(Method method) {
-                if (method.getName().startsWith("set")) {
-                    return method.getParameterTypes()[0];
-                }
-
-                // Assume is isXXX/getXXX
-                return method.getReturnType();
+                return isSetter(method) ? method.getParameterTypes()[0] : method.getReturnType();
             }
 
+            @Override
+            public Type getGenericType(Method method) {
+                return isSetter(method) ? method.getGenericParameterTypes()[0] : method.getGenericReturnType();
+            }
+
+            private boolean isSetter(Method method) {
+                return method.getName().startsWith("set");
+            }
         };
 
         private static final Resolver<Field> FIELD = new Resolver<Field>() {
@@ -277,6 +302,11 @@ public class JaxbBeanUnmarshaller {
             public Class<?> getPropertyType(Field field) {
                 return field.getType();
             }
+
+            @Override
+            public Type getGenericType(Field field) {
+                return field.getGenericType();
+            }
         };
 
         public abstract AccessibleObject[] getDirectMembers(Class<?> type);
@@ -284,5 +314,7 @@ public class JaxbBeanUnmarshaller {
         public abstract String getPropertyName(T t);
 
         public abstract Class<?> getPropertyType(T t);
+
+        public abstract Type getGenericType(T t);
     }
 }

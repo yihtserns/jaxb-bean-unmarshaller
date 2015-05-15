@@ -16,6 +16,7 @@
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
 import java.io.StringReader;
+import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -281,6 +282,23 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(result.getNamedSetterChild().isValid(), is(true));
     }
 
+    @Test
+    public void canUnmarshalSingleItemListChildElement() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <children valid=\"true\"/>\n"
+                + "  <children valid=\"false\"/>\n"
+                + "  <children valid=\"true\"/>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getChildren(), hasSize(3));
+        assertThat(result.getChildren().get(0).isValid(), is(true));
+        assertThat(result.getChildren().get(1).isValid(), is(false));
+        assertThat(result.getChildren().get(2).isValid(), is(true));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -353,6 +371,8 @@ public class JaxbBeanUnmarshallerTest {
         private JaxbChild parentChild;
         @XmlElement(name = "parentChildWithName")
         private JaxbChild namedParentChild;
+        @XmlElement
+        private List<JaxbChild> children;
 
         public Long getLength() {
             return length;
@@ -376,6 +396,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setNamedParentChild(JaxbChild namedParentChild) {
             this.namedParentChild = namedParentChild;
+        }
+
+        public List<JaxbChild> getChildren() {
+            return children;
+        }
+
+        public void setChildren(List<JaxbChild> children) {
+            this.children = children;
         }
     }
 
