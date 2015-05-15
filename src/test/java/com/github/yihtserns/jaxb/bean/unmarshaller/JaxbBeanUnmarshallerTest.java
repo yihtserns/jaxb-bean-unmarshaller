@@ -283,7 +283,7 @@ public class JaxbBeanUnmarshallerTest {
     }
 
     @Test
-    public void canUnmarshalSingleItemListChildElement() throws Exception {
+    public void canUnmarshalListChildElement() throws Exception {
         JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
@@ -373,6 +373,8 @@ public class JaxbBeanUnmarshallerTest {
         private JaxbChild namedParentChild;
         @XmlElement
         private List<JaxbChild> children;
+        @XmlElement(name = "alias")
+        private List<String> aliases;
 
         public Long getLength() {
             return length;
@@ -404,6 +406,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setChildren(List<JaxbChild> children) {
             this.children = children;
+        }
+
+        public List<String> getAliases() {
+            return aliases;
+        }
+
+        public void setAliases(List<String> aliases) {
+            this.aliases = aliases;
         }
     }
 
