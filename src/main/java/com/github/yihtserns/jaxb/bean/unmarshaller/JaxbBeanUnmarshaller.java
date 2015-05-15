@@ -23,7 +23,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -62,14 +61,14 @@ public class JaxbBeanUnmarshaller {
     private void addGlobalType(Class<?> type) throws NoSuchMethodException {
         String elementName = resolveRootElementName(type);
         BeanUnmarshaller unmarshaller = new BeanUnmarshaller(type.getDeclaredConstructor());
-        init(unmarshaller, type);
+        unmarshaller.init();
 
         globalName2Unmarshaller.put(elementName, unmarshaller);
     }
 
     private void init() throws NoSuchMethodException {
-        for (Entry<Class<?>, BeanUnmarshaller> entry : type2Unmarshaller.entrySet()) {
-            init(entry.getValue(), entry.getKey());
+        for (BeanUnmarshaller unmarshaller : type2Unmarshaller.values()) {
+            unmarshaller.init();
         }
     }
 
@@ -80,25 +79,6 @@ public class JaxbBeanUnmarshaller {
             type2Unmarshaller.put(type, unmarshaller);
         }
         return unmarshaller;
-    }
-
-    private void init(BeanUnmarshaller unmarshaller, Class<?> type) throws NoSuchMethodException {
-        while (type != Object.class) {
-            XmlAccessorType xmlAccessorType = type.getAnnotation(XmlAccessorType.class);
-            Resolver resolver = getResolverFor(xmlAccessorType);
-
-            for (AccessibleObject accObj : resolver.getDirectMembers(type)) {
-                if (accObj.isAnnotationPresent(XmlAttribute.class)) {
-                    unmarshaller.addAttribute(accObj, resolver);
-                } else if (accObj.isAnnotationPresent(XmlElement.class)) {
-                    unmarshaller.addElement(accObj, resolver);
-                } else if (accObj.isAnnotationPresent(XmlElementRef.class)) {
-                    unmarshaller.addElementRef(accObj, resolver);
-                }
-            }
-
-            type = type.getSuperclass();
-        }
     }
 
     private Resolver getResolverFor(XmlAccessorType xmlAccessorType) throws UnsupportedOperationException {
@@ -131,9 +111,11 @@ public class JaxbBeanUnmarshaller {
         Map<String, String> elementName2PropertyName = new HashMap<String, String>();
         Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
         Map<String, BeanUnmarshaller> localName2Unmarshaller = new HashMap<String, BeanUnmarshaller>();
+        Class<?> type;
         Constructor constructor;
 
         private BeanUnmarshaller(Constructor constructor) {
+            this.type = constructor.getDeclaringClass();
             this.constructor = constructor;
         }
 
@@ -198,6 +180,25 @@ public class JaxbBeanUnmarshaller {
         public <T extends AccessibleObject> void addElementRef(T accObj, Resolver<T> resolver) {
             String globalName = resolveRootElementName(resolver.getPropertyType(accObj));
             elementName2PropertyName.put(globalName, resolver.getPropertyName(accObj));
+        }
+
+        public void init() throws NoSuchMethodException {
+            while (type != Object.class) {
+                XmlAccessorType xmlAccessorType = type.getAnnotation(XmlAccessorType.class);
+                Resolver resolver = getResolverFor(xmlAccessorType);
+
+                for (AccessibleObject accObj : resolver.getDirectMembers(type)) {
+                    if (accObj.isAnnotationPresent(XmlAttribute.class)) {
+                        addAttribute(accObj, resolver);
+                    } else if (accObj.isAnnotationPresent(XmlElement.class)) {
+                        addElement(accObj, resolver);
+                    } else if (accObj.isAnnotationPresent(XmlElementRef.class)) {
+                        addElementRef(accObj, resolver);
+                    }
+                }
+
+                type = type.getSuperclass();
+            }
         }
 
         private boolean isNamespaceDeclaration(Attr attr) {
