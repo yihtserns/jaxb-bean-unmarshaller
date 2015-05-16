@@ -114,6 +114,7 @@ public class JaxbBeanUnmarshaller {
 
     private class BeanUnmarshaller {
 
+        Set<String> baseTypeElementNames = new HashSet<String>();
         Set<String> listTypeElementNames = new HashSet<String>();
         Map<String, String> elementName2PropertyName = new HashMap<String, String>();
         Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
@@ -152,7 +153,9 @@ public class JaxbBeanUnmarshaller {
                     childUnmarshaller = localName2Unmarshaller.get(localName);
                 }
 
-                Object childInstance = childUnmarshaller.unmarshal(childElement);
+                Object childInstance = baseTypeElementNames.contains(localName)
+                        ? childElement.getTextContent()
+                        : childUnmarshaller.unmarshal(childElement);
 
                 String propertyName = resolvePropertyName(childElement);
 
@@ -195,8 +198,12 @@ public class JaxbBeanUnmarshaller {
                 type = (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
                 listTypeElementNames.add(elementName);
             }
-            BeanUnmarshaller childUnmarshaller = getUnmarshallerForType(type);
-            localName2Unmarshaller.put(elementName, childUnmarshaller);
+            if (type == String.class) {
+                baseTypeElementNames.add(elementName);
+            } else {
+                BeanUnmarshaller childUnmarshaller = getUnmarshallerForType(type);
+                localName2Unmarshaller.put(elementName, childUnmarshaller);
+            }
         }
 
         public <T extends AccessibleObject> void addElementRef(T accObj, Resolver<T> resolver) {

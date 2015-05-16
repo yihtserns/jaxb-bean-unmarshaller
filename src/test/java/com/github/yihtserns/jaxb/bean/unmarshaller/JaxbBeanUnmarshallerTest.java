@@ -299,6 +299,20 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(result.getChildren().get(2).isValid(), is(true));
     }
 
+    @Test
+    public void canUnmarshalStringList() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <alias>This</alias>\n"
+                + "  <alias>That</alias>\n"
+                + "  <alias>It</alias>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getAliases(), contains("This", "That", "It"));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
