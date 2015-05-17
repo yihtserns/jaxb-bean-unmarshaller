@@ -382,6 +382,23 @@ public class JaxbBeanUnmarshallerTest {
                 "purge-skipped"));
     }
 
+    @Test
+    public void canUnmarshalNonStringElementWrapperWithCustomWrapperAndElementName() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <wrappedOptions5>\n"
+                + "    <option5 valid=\"true\"/>\n"
+                + "    <option5 valid=\"false\"/>\n"
+                + "  </wrappedOptions5>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getOptions5(), hasSize(2));
+        assertThat(result.getOptions5().get(0).isValid(), is(true));
+        assertThat(result.getOptions5().get(1).isValid(), is(false));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -470,6 +487,9 @@ public class JaxbBeanUnmarshallerTest {
         @XmlElementWrapper(name = "wrappedOptions4")
         @XmlElement(name = "option4")
         private List<String> options4;
+        @XmlElementWrapper(name = "wrappedOptions5")
+        @XmlElement(name = "option5")
+        private List<JaxbChild> options5;
 
         public Long getLength() {
             return length;
@@ -541,6 +561,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setOptions4(List<String> options4) {
             this.options4 = options4;
+        }
+
+        public List<JaxbChild> getOptions5() {
+            return options5;
+        }
+
+        public void setOptions5(List<JaxbChild> options5) {
+            this.options5 = options5;
         }
     }
 
