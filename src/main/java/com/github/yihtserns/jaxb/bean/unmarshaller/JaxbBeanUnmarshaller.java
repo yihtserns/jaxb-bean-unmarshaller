@@ -232,15 +232,14 @@ public class JaxbBeanUnmarshaller {
             String propertyName = resolver.getPropertyName(accObj);
 
             boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
-            String elementName = accObj.getAnnotation(XmlElement.class).name();
+            String elementName;
             if (wrapped) {
-                String wrapperName = accObj.getAnnotation(XmlElementWrapper.class).name();
-                if (wrapperName.equals(AUTO_GENERATED_NAME)) {
-                    elementName = propertyName;
-                } else {
-                    elementName = wrapperName;
-                }
-            } else if (elementName.equals(AUTO_GENERATED_NAME)) {
+                elementName = accObj.getAnnotation(XmlElementWrapper.class).name();
+            } else {
+                elementName = accObj.getAnnotation(XmlElement.class).name();
+            }
+
+            if (elementName.equals(AUTO_GENERATED_NAME)) {
                 elementName = propertyName;
             }
 
