@@ -231,14 +231,20 @@ public class JaxbBeanUnmarshaller {
         public <T extends AccessibleObject> void addElement(T accObj, Resolver<T> resolver) throws NoSuchMethodException {
             String propertyName = resolver.getPropertyName(accObj);
 
+            boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
             String elementName = accObj.getAnnotation(XmlElement.class).name();
-            if (elementName.equals(AUTO_GENERATED_NAME)) {
+            if (wrapped) {
+                String wrapperName = accObj.getAnnotation(XmlElementWrapper.class).name();
+                if (wrapperName.equals(AUTO_GENERATED_NAME)) {
+                    elementName = propertyName;
+                } else {
+                    elementName = wrapperName;
+                    elementName2PropertyName.put(elementName, propertyName);
+                }
+            } else if (elementName.equals(AUTO_GENERATED_NAME)) {
                 elementName = propertyName;
-            } else {
-                elementName2PropertyName.put(elementName, propertyName);
             }
 
-            boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
             Class<?> type = resolver.getPropertyType(accObj);
             if (type == List.class) {
                 Type genericType = resolver.getGenericType(accObj);
@@ -251,8 +257,14 @@ public class JaxbBeanUnmarshaller {
 
             Unmarshaller childUnmarshaller = getUnmarshallerForType(type);
             if (wrapped) {
-                childUnmarshaller = new WrapperUnmarshaller(childUnmarshaller, elementName);
+                String wrappedElementName = accObj.getAnnotation(XmlElement.class).name();
+                if (wrappedElementName.equals(AUTO_GENERATED_NAME)) {
+                    wrappedElementName = propertyName;
+                }
+                childUnmarshaller = new WrapperUnmarshaller(childUnmarshaller, wrappedElementName);
             }
+
+            elementName2PropertyName.put(elementName, propertyName);
             localName2Unmarshaller.put(elementName, childUnmarshaller);
         }
 

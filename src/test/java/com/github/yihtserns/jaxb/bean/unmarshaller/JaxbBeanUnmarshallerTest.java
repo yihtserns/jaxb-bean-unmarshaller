@@ -16,11 +16,7 @@
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
 import java.io.StringReader;
-import java.util.Arrays;
 import java.util.List;
-import static javax.xml.bind.JAXB.marshal;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -335,6 +331,57 @@ public class JaxbBeanUnmarshallerTest {
                 "purge-skipped"));
     }
 
+    @Test
+    public void canUnmarshalElementWrapperWithCustomElementName() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <options2>\n"
+                + "    <option2>skip-invalid</option2>\n"
+                + "    <option2>purge-skipped</option2>\n"
+                + "  </options2>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getOptions2(), contains(
+                "skip-invalid",
+                "purge-skipped"));
+    }
+
+    @Test
+    public void canUnmarshalElementWrapperWithCustomWrapperName() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <wrappedOptions3>\n"
+                + "    <options3>skip-invalid</options3>\n"
+                + "    <options3>purge-skipped</options3>\n"
+                + "  </wrappedOptions3>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getOptions3(), contains(
+                "skip-invalid",
+                "purge-skipped"));
+    }
+
+    @Test
+    public void canUnmarshalElementWrapperWithCustomWrapperAndElementName() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <wrappedOptions4>\n"
+                + "    <option4>skip-invalid</option4>\n"
+                + "    <option4>purge-skipped</option4>\n"
+                + "  </wrappedOptions4>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getOptions4(), contains(
+                "skip-invalid",
+                "purge-skipped"));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -414,6 +461,15 @@ public class JaxbBeanUnmarshallerTest {
         @XmlElementWrapper
         @XmlElement
         private List<String> options1;
+        @XmlElementWrapper
+        @XmlElement(name = "option2")
+        private List<String> options2;
+        @XmlElementWrapper(name = "wrappedOptions3")
+        @XmlElement
+        private List<String> options3;
+        @XmlElementWrapper(name = "wrappedOptions4")
+        @XmlElement(name = "option4")
+        private List<String> options4;
 
         public Long getLength() {
             return length;
@@ -461,6 +517,30 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setOptions1(List<String> options1) {
             this.options1 = options1;
+        }
+
+        public List<String> getOptions2() {
+            return options2;
+        }
+
+        public void setOptions2(List<String> options2) {
+            this.options2 = options2;
+        }
+
+        public List<String> getOptions3() {
+            return options3;
+        }
+
+        public void setOptions3(List<String> options3) {
+            this.options3 = options3;
+        }
+
+        public List<String> getOptions4() {
+            return options4;
+        }
+
+        public void setOptions4(List<String> options4) {
+            this.options4 = options4;
         }
     }
 
