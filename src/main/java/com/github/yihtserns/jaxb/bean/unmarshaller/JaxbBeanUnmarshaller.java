@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.w3c.dom.Attr;
@@ -229,8 +230,11 @@ public class JaxbBeanUnmarshaller {
         }
 
         public <T extends AccessibleObject> void addElement(T accObj, Resolver<T> resolver) throws NoSuchMethodException {
+            addElement(accObj.getAnnotation(XmlElement.class), accObj, resolver);
+        }
+
+        public <T extends AccessibleObject> void addElement(XmlElement xmlElement, T accObj, Resolver<T> resolver) throws NoSuchMethodException {
             String propertyName = resolver.getPropertyName(accObj);
-            XmlElement xmlElement = accObj.getAnnotation(XmlElement.class);
 
             boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
             String elementName;
@@ -287,6 +291,11 @@ public class JaxbBeanUnmarshaller {
                         addAttribute(accObj, resolver);
                     } else if (accObj.isAnnotationPresent(XmlElement.class)) {
                         addElement(accObj, resolver);
+                    } else if (accObj.isAnnotationPresent(XmlElements.class)) {
+                        XmlElements xmlElements = accObj.getAnnotation(XmlElements.class);
+                        for (XmlElement xmlElement : xmlElements.value()) {
+                            addElement(xmlElement, accObj, resolver);
+                        }
                     } else if (accObj.isAnnotationPresent(XmlElementRef.class)) {
                         addElementRef(accObj, resolver);
                     }

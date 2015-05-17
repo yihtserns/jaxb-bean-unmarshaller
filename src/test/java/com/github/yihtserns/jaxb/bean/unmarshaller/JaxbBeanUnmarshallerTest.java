@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.hamcrest.Matcher;
@@ -413,6 +414,31 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(((JaxbChild) result.getTypedChild()).getName(), is("A Child"));
     }
 
+    @Test
+    public void canUnmarshalXmlElements() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        {
+            String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                    + "  <child1 valid=\"true\"/>\n"
+                    + "</jaxbObject>";
+
+            JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+            assertThat(result.getTwoTypes(), (Matcher) isA(JaxbChild.class));
+            assertThat(result.getTwoTypes().isValid(), is(true));
+        }
+
+        {
+            String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                    + "  <child2 valid=\"false\"/>\n"
+                    + "</jaxbObject>";
+
+            JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+            assertThat(result.getTwoTypes(), (Matcher) isA(JaxbChild2.class));
+            assertThat(result.getTwoTypes().isValid(), is(false));
+        }
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -436,6 +462,11 @@ public class JaxbBeanUnmarshallerTest {
         private JaxbChild namedChild;
         @XmlElement(type = JaxbChild.class)
         private JaxbParent typedChild;
+        @XmlElements({
+            @XmlElement(name = "child1", type = JaxbChild.class),
+            @XmlElement(name = "child2", type = JaxbChild2.class)
+        })
+        private JaxbParent twoTypes;
 
         public String getId() {
             return id;
@@ -483,6 +514,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setTypedChild(JaxbParent typedChild) {
             this.typedChild = typedChild;
+        }
+
+        public JaxbParent getTwoTypes() {
+            return twoTypes;
+        }
+
+        public void setTwoTypes(JaxbParent twoTypes) {
+            this.twoTypes = twoTypes;
         }
     }
 
@@ -694,6 +733,10 @@ public class JaxbBeanUnmarshallerTest {
         public void setCount(Long count) {
             this.count = count;
         }
+    }
+
+    private static final class JaxbChild2 extends JaxbParent {
+
     }
 
     @XmlRootElement
