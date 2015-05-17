@@ -33,6 +33,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.w3c.dom.Attr;
@@ -133,6 +134,34 @@ public class JaxbBeanUnmarshaller {
         }
     }
 
+    private class WrapperUnmarshaller implements Unmarshaller {
+
+        private Unmarshaller wrappedUnmarshaller;
+        private String localName;
+
+        public WrapperUnmarshaller(Unmarshaller wrappedUnmarshaller, String localName) {
+            this.wrappedUnmarshaller = wrappedUnmarshaller;
+            this.localName = localName;
+        }
+
+        public Object unmarshal(Element element) throws Exception {
+            NodeList childElements = element.getElementsByTagName(localName);
+
+            List<Object> result = new ArrayList<Object>();
+            for (int i = 0; i < childElements.getLength(); i++) {
+                Element childElement = (Element) childElements.item(i);
+
+                Object instance = wrappedUnmarshaller.unmarshal(childElement);
+                result.add(instance);
+            }
+
+            return result;
+        }
+
+        public void init() throws Exception {
+        }
+    }
+
     private class BeanUnmarshaller implements Unmarshaller {
 
         Set<String> listTypeElementNames = new HashSet<String>();
@@ -209,14 +238,21 @@ public class JaxbBeanUnmarshaller {
                 elementName2PropertyName.put(elementName, propertyName);
             }
 
+            boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
             Class<?> type = resolver.getPropertyType(accObj);
             if (type == List.class) {
                 Type genericType = resolver.getGenericType(accObj);
                 type = (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
-                listTypeElementNames.add(elementName);
+
+                if (!wrapped) {
+                    listTypeElementNames.add(elementName);
+                }
             }
 
             Unmarshaller childUnmarshaller = getUnmarshallerForType(type);
+            if (wrapped) {
+                childUnmarshaller = new WrapperUnmarshaller(childUnmarshaller, elementName);
+            }
             localName2Unmarshaller.put(elementName, childUnmarshaller);
         }
 

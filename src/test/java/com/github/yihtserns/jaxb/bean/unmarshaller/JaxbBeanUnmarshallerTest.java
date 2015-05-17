@@ -16,12 +16,17 @@
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.List;
+import static javax.xml.bind.JAXB.marshal;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.Test;
@@ -313,6 +318,23 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(result.getAliases(), contains("This", "That", "It"));
     }
 
+    @Test
+    public void canUnmarshalElementWrapper() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <options1>\n"
+                + "    <options1>skip-invalid</options1>\n"
+                + "    <options1>purge-skipped</options1>\n"
+                + "  </options1>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getOptions1(), contains(
+                "skip-invalid",
+                "purge-skipped"));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -389,6 +411,9 @@ public class JaxbBeanUnmarshallerTest {
         private List<JaxbChild> children;
         @XmlElement(name = "alias")
         private List<String> aliases;
+        @XmlElementWrapper
+        @XmlElement
+        private List<String> options1;
 
         public Long getLength() {
             return length;
@@ -428,6 +453,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setAliases(List<String> aliases) {
             this.aliases = aliases;
+        }
+
+        public List<String> getOptions1() {
+            return options1;
+        }
+
+        public void setOptions1(List<String> options1) {
+            this.options1 = options1;
         }
     }
 
