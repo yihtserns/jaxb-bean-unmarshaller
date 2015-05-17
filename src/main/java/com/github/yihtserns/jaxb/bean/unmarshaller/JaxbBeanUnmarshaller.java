@@ -239,7 +239,6 @@ public class JaxbBeanUnmarshaller {
                     elementName = propertyName;
                 } else {
                     elementName = wrapperName;
-                    elementName2PropertyName.put(elementName, propertyName);
                 }
             } else if (elementName.equals(AUTO_GENERATED_NAME)) {
                 elementName = propertyName;
@@ -264,7 +263,9 @@ public class JaxbBeanUnmarshaller {
                 childUnmarshaller = new WrapperUnmarshaller(childUnmarshaller, wrappedElementName);
             }
 
-            elementName2PropertyName.put(elementName, propertyName);
+            if (!elementName.equals(propertyName)) {
+                elementName2PropertyName.put(elementName, propertyName);
+            }
             localName2Unmarshaller.put(elementName, childUnmarshaller);
         }
 
