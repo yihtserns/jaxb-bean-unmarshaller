@@ -230,32 +230,36 @@ public class JaxbBeanUnmarshaller {
 
         public <T extends AccessibleObject> void addElement(T accObj, Resolver<T> resolver) throws NoSuchMethodException {
             String propertyName = resolver.getPropertyName(accObj);
+            XmlElement xmlElement = accObj.getAnnotation(XmlElement.class);
 
             boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
             String elementName;
             if (wrapped) {
                 elementName = accObj.getAnnotation(XmlElementWrapper.class).name();
             } else {
-                elementName = accObj.getAnnotation(XmlElement.class).name();
+                elementName = xmlElement.name();
             }
 
             if (elementName.equals(AUTO_GENERATED_NAME)) {
                 elementName = propertyName;
             }
 
-            Class<?> type = resolver.getPropertyType(accObj);
-            if (type == List.class) {
-                Type genericType = resolver.getGenericType(accObj);
-                type = (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+            Class<?> type = xmlElement.type();
+            if (type == XmlElement.DEFAULT.class) {
+                type = resolver.getPropertyType(accObj);
+                if (type == List.class) {
+                    Type genericType = resolver.getGenericType(accObj);
+                    type = (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
 
-                if (!wrapped) {
-                    listTypeElementNames.add(elementName);
+                    if (!wrapped) {
+                        listTypeElementNames.add(elementName);
+                    }
                 }
             }
 
             Unmarshaller childUnmarshaller = getUnmarshallerForType(type);
             if (wrapped) {
-                String wrappedElementName = accObj.getAnnotation(XmlElement.class).name();
+                String wrappedElementName = xmlElement.name();
                 if (wrappedElementName.equals(AUTO_GENERATED_NAME)) {
                     wrappedElementName = propertyName;
                 }

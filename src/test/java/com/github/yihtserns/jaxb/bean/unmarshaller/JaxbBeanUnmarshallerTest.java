@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.DocumentBuilderFactory;
+import org.hamcrest.Matcher;
 import org.junit.Test;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -399,6 +400,19 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(result.getOptions5().get(1).isValid(), is(false));
     }
 
+    @Test
+    public void canUnmarshalTypedElement() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "    <typedChild name=\"A Child\"/>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getTypedChild(), (Matcher) isA(JaxbChild.class));
+        assertThat(((JaxbChild) result.getTypedChild()).getName(), is("A Child"));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -420,6 +434,8 @@ public class JaxbBeanUnmarshallerTest {
         private JaxbObject2 globalChild;
         @XmlElement(name = "childWithName")
         private JaxbChild namedChild;
+        @XmlElement(type = JaxbChild.class)
+        private JaxbParent typedChild;
 
         public String getId() {
             return id;
@@ -459,6 +475,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setNamedChild(JaxbChild namedChild) {
             this.namedChild = namedChild;
+        }
+
+        public JaxbParent getTypedChild() {
+            return typedChild;
+        }
+
+        public void setTypedChild(JaxbParent typedChild) {
+            this.typedChild = typedChild;
         }
     }
 
