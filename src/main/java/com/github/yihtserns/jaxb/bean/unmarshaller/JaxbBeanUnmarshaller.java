@@ -249,15 +249,18 @@ public class JaxbBeanUnmarshaller {
             }
 
             Class<?> type = xmlElement.type();
+            Class<?> propertyType = resolver.getPropertyType(accObj);
             if (type == XmlElement.DEFAULT.class) {
-                type = resolver.getPropertyType(accObj);
-                if (type == List.class) {
+                if (propertyType == List.class) {
                     Type genericType = resolver.getGenericType(accObj);
                     type = (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
-
-                    if (!wrapped) {
-                        listTypeElementNames.add(elementName);
-                    }
+                } else {
+                    type = propertyType;
+                }
+            }
+            if (propertyType == List.class) {
+                if (!wrapped) {
+                    listTypeElementNames.add(elementName);
                 }
             }
 

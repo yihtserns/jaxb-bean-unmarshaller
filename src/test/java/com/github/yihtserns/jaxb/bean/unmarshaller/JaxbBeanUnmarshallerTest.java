@@ -17,8 +17,6 @@ package com.github.yihtserns.jaxb.bean.unmarshaller;
 
 import java.io.StringReader;
 import java.util.List;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -443,7 +441,7 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalXmlElementsList() throws Exception {
-        Unmarshaller unmarshaller = JAXBContext.newInstance(JaxbObject.class).createUnmarshaller();
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <childList1 valid=\"true\"/>\n"
