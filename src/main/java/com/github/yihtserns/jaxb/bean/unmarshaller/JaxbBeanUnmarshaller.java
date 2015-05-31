@@ -229,10 +229,6 @@ public class JaxbBeanUnmarshaller {
             }
         }
 
-        public <T extends AccessibleObject> void addElement(T accObj, Resolver<T> resolver) throws NoSuchMethodException {
-            addElement(accObj.getAnnotation(XmlElement.class), accObj, resolver);
-        }
-
         public <T extends AccessibleObject> void addElement(XmlElement xmlElement, T accObj, Resolver<T> resolver) throws NoSuchMethodException {
             String propertyName = resolver.getPropertyName(accObj);
 
@@ -292,7 +288,8 @@ public class JaxbBeanUnmarshaller {
                     if (accObj.isAnnotationPresent(XmlAttribute.class)) {
                         addAttribute(accObj, resolver);
                     } else if (accObj.isAnnotationPresent(XmlElement.class)) {
-                        addElement(accObj, resolver);
+                        XmlElement xmlElement = accObj.getAnnotation(XmlElement.class);
+                        addElement(xmlElement, accObj, resolver);
                     } else if (accObj.isAnnotationPresent(XmlElements.class)) {
                         XmlElements xmlElements = accObj.getAnnotation(XmlElements.class);
                         for (XmlElement xmlElement : xmlElements.value()) {
