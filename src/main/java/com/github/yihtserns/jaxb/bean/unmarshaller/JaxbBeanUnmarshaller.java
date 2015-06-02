@@ -137,26 +137,32 @@ public class JaxbBeanUnmarshaller {
 
     private class WrapperUnmarshaller implements Unmarshaller {
 
-        private Unmarshaller wrappedUnmarshaller;
-        private String localName;
-
-        public WrapperUnmarshaller(Unmarshaller wrappedUnmarshaller, String localName) {
-            this.wrappedUnmarshaller = wrappedUnmarshaller;
-            this.localName = localName;
-        }
+        private Map<String, Unmarshaller> localName2Unmarshaller = new HashMap<String, Unmarshaller>();
 
         public Object unmarshal(Element element) throws Exception {
-            NodeList childElements = element.getElementsByTagName(localName);
-
             List<Object> result = new ArrayList<Object>();
-            for (int i = 0; i < childElements.getLength(); i++) {
-                Element childElement = (Element) childElements.item(i);
 
-                Object instance = wrappedUnmarshaller.unmarshal(childElement);
-                result.add(instance);
+            NodeList childNodes = element.getChildNodes();
+            for (int i = 0; i < childNodes.getLength(); i++) {
+                Node item = childNodes.item(i);
+                if (item.getNodeType() != Node.ELEMENT_NODE) {
+                    continue;
+                }
+                Element childElement = (Element) item;
+                String localName = childElement.getLocalName();
+
+                Unmarshaller unmarshaller = localName2Unmarshaller.get(localName);
+                if (unmarshaller != null) {
+                    Object instance = unmarshaller.unmarshal(childElement);
+                    result.add(instance);
+                }
             }
 
             return result;
+        }
+
+        public void put(String localName, Unmarshaller unmarshaller) {
+            this.localName2Unmarshaller.put(localName, unmarshaller);
         }
 
         public void init() throws Exception {
@@ -265,7 +271,13 @@ public class JaxbBeanUnmarshaller {
                 if (wrappedElementName.equals(AUTO_GENERATED_NAME)) {
                     wrappedElementName = propertyName;
                 }
-                childUnmarshaller = new WrapperUnmarshaller(childUnmarshaller, wrappedElementName);
+
+                WrapperUnmarshaller wrapperUnmarshaller = (WrapperUnmarshaller) localName2Unmarshaller.get(elementName);
+                if (wrapperUnmarshaller == null) {
+                    wrapperUnmarshaller = new WrapperUnmarshaller();
+                }
+                wrapperUnmarshaller.put(wrappedElementName, childUnmarshaller);
+                childUnmarshaller = wrapperUnmarshaller;
             }
 
             if (!elementName.equals(propertyName)) {

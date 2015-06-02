@@ -474,6 +474,31 @@ public class JaxbBeanUnmarshallerTest {
         }
     }
 
+    @Test
+    public void canUnmarshalElementsWrapper() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <options6>\n"
+                + "    <child1 valid=\"true\"/>\n"
+                + "    <child2 valid=\"false\"/>\n"
+                + "  </options6>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        List<JaxbParent> list = result.getOptions6();
+        {
+            JaxbParent child = list.get(0);
+            assertThat(child, (Matcher) isA(JaxbChild.class));
+            assertThat(child.isValid(), is(true));
+        }
+        {
+            JaxbParent child = list.get(1);
+            assertThat(child, (Matcher) isA(JaxbChild2.class));
+            assertThat(child.isValid(), is(false));
+        }
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -601,6 +626,12 @@ public class JaxbBeanUnmarshallerTest {
         @XmlElementWrapper(name = "wrappedOptions5")
         @XmlElement(name = "option5")
         private List<JaxbChild> options5;
+        @XmlElementWrapper
+        @XmlElements({
+            @XmlElement(name = "child1", type = JaxbChild.class, namespace = "http://example.com/jaxb"),
+            @XmlElement(name = "child2", type = JaxbChild2.class, namespace = "http://example.com/jaxb")
+        })
+        private List<JaxbParent> options6;
 
         public Long getLength() {
             return length;
@@ -680,6 +711,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setOptions5(List<JaxbChild> options5) {
             this.options5 = options5;
+        }
+
+        public List<JaxbParent> getOptions6() {
+            return options6;
+        }
+
+        public void setOptions6(List<JaxbParent> options6) {
+            this.options6 = options6;
         }
     }
 
