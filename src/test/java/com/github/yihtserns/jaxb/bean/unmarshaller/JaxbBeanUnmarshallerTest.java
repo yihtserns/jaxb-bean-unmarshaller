@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlValue;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.hamcrest.Matcher;
 import org.junit.Test;
@@ -499,6 +500,20 @@ public class JaxbBeanUnmarshallerTest {
         }
     }
 
+    @Test
+    public void canUnmarshalXmlValue() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <child>\n"
+                + "    <note>A child</note>\n"
+                + "  </child>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getChild().getNote().getText(), is("A child"));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -804,6 +819,8 @@ public class JaxbBeanUnmarshallerTest {
         private String name;
         @XmlAttribute(name = "counter")
         private Long count;
+        @XmlElement
+        private Note note;
 
         public String getName() {
             return name;
@@ -820,6 +837,14 @@ public class JaxbBeanUnmarshallerTest {
         public void setCount(Long count) {
             this.count = count;
         }
+
+        public Note getNote() {
+            return note;
+        }
+
+        public void setNote(Note note) {
+            this.note = note;
+        }
     }
 
     private static final class JaxbChild2 extends JaxbParent {
@@ -829,5 +854,20 @@ public class JaxbBeanUnmarshallerTest {
     @XmlRootElement
     private static final class JaxbObject2 extends JaxbParent {
 
+    }
+
+    @XmlAccessorType(XmlAccessType.FIELD)
+    private static final class Note {
+
+        @XmlValue
+        private String text;
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
+        }
     }
 }

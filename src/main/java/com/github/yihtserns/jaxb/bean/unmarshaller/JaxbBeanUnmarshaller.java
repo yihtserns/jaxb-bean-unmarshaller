@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlValue;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.w3c.dom.Attr;
@@ -184,6 +185,7 @@ public class JaxbBeanUnmarshaller {
         Map<String, String> elementName2PropertyName = new HashMap<String, String>();
         Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
         Map<String, Unmarshaller> localName2Unmarshaller = new HashMap<String, Unmarshaller>();
+        String textContentPropertyName = null;
         Class<?> beanClass;
         Constructor constructor;
 
@@ -231,6 +233,9 @@ public class JaxbBeanUnmarshaller {
                 } else {
                     bean.setPropertyValue(propertyName, childInstance);
                 }
+            }
+            if (textContentPropertyName != null) {
+                bean.setPropertyValue(textContentPropertyName, element.getTextContent());
             }
             return instance;
         }
@@ -300,6 +305,10 @@ public class JaxbBeanUnmarshaller {
             elementName2PropertyName.put(globalName, resolver.getPropertyName(accObj));
         }
 
+        private <T extends AccessibleObject> void setTextContent(T accObj, Resolver<T> resolver) {
+            this.textContentPropertyName = resolver.getPropertyName(accObj);
+        }
+
         public void init() throws Exception {
             while (beanClass != Object.class) {
                 XmlAccessorType xmlAccessorType = beanClass.getAnnotation(XmlAccessorType.class);
@@ -318,6 +327,8 @@ public class JaxbBeanUnmarshaller {
                         }
                     } else if (accObj.isAnnotationPresent(XmlElementRef.class)) {
                         addElementRef(accObj, resolver);
+                    } else if (accObj.isAnnotationPresent(XmlValue.class)) {
+                        setTextContent(accObj, resolver);
                     }
                 }
 
