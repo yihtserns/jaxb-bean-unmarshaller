@@ -52,6 +52,7 @@ public class JaxbBeanUnmarshaller {
     private static final String AUTO_GENERATED_NAME = "##default";
     private Map<String, Unmarshaller> globalName2Unmarshaller = new HashMap<String, Unmarshaller>();
     private Map<Class<?>, Unmarshaller> type2Unmarshaller = new HashMap<Class<?>, Unmarshaller>();
+    private Map<Class<?>, Unmarshaller> type2InitializedUnmarshaller = new HashMap<Class<?>, Unmarshaller>();
 
     /**
      * @see #newInstance(java.lang.Class...)
@@ -75,13 +76,21 @@ public class JaxbBeanUnmarshaller {
     }
 
     private void init() throws Exception {
-        for (Unmarshaller unmarshaller : type2Unmarshaller.values()) {
-            unmarshaller.init();
+        while (!type2Unmarshaller.isEmpty()) {
+            type2InitializedUnmarshaller.putAll(type2Unmarshaller);
+            type2Unmarshaller.clear();
+
+            for (Unmarshaller unmarshaller : type2InitializedUnmarshaller.values()) {
+                unmarshaller.init();
+            }
         }
     }
 
     private Unmarshaller getUnmarshallerForType(Class<?> type) throws NoSuchMethodException {
-        Unmarshaller unmarshaller = type2Unmarshaller.get(type);
+        Unmarshaller unmarshaller = type2InitializedUnmarshaller.get(type);
+        if (unmarshaller == null) {
+            unmarshaller = type2Unmarshaller.get(type);
+        }
         if (unmarshaller == null) {
             if (type == String.class) {
                 unmarshaller = new StringUnmarshaller();
