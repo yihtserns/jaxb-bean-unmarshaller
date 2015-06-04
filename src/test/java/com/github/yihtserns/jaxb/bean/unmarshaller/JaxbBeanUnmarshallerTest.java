@@ -205,7 +205,7 @@ public class JaxbBeanUnmarshallerTest {
         JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class, JaxbObject2.class);
 
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
-                + "  <jaxbObject2 valid=\"true\"/>\n"
+                + "  <secondJaxbObject valid=\"true\"/>\n"
                 + "</jaxbObject>";
 
         JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
@@ -851,7 +851,7 @@ public class JaxbBeanUnmarshallerTest {
 
     }
 
-    @XmlRootElement
+    @XmlRootElement(name = "secondJaxbObject")
     private static final class JaxbObject2 extends JaxbParent {
 
     }

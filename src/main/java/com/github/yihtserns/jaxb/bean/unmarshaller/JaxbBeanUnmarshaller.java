@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
@@ -124,8 +125,13 @@ public class JaxbBeanUnmarshaller {
         return jaxbBeanUnmarshaller;
     }
 
-    private static String resolveRootElementName(Class type) {
-        return Introspector.decapitalize(type.getSimpleName());
+    private static String resolveRootElementName(Class<?> type) {
+        XmlRootElement xmlRootElement = type.getAnnotation(XmlRootElement.class);
+        String name = xmlRootElement.name();
+        if (name.equals(AUTO_GENERATED_NAME)) {
+            name = Introspector.decapitalize(type.getSimpleName());
+        }
+        return name;
     }
 
     private interface Unmarshaller {
