@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -53,6 +54,7 @@ public class JaxbBeanUnmarshaller {
 
     private static final String AUTO_GENERATED_NAME = "##default";
     private Map<String, Unmarshaller> globalName2Unmarshaller = new HashMap<String, Unmarshaller>();
+    private Map<Class<?>, String> globalType2Name = new HashMap<Class<?>, String>();
     private Map<Class<?>, Unmarshaller> type2Unmarshaller = new HashMap<Class<?>, Unmarshaller>();
     private Map<Class<?>, Unmarshaller> type2InitializedUnmarshaller = new HashMap<Class<?>, Unmarshaller>();
 
@@ -72,12 +74,16 @@ public class JaxbBeanUnmarshaller {
     private void addGlobalType(Class<?> type) throws Exception {
         String elementName = resolveRootElementName(type);
         BeanUnmarshaller unmarshaller = new BeanUnmarshaller(type.getDeclaredConstructor());
-        unmarshaller.init();
 
         globalName2Unmarshaller.put(elementName, unmarshaller);
+        globalType2Name.put(type, elementName);
     }
 
     private void init() throws Exception {
+        for (Unmarshaller unmarshaller : globalName2Unmarshaller.values()) {
+            unmarshaller.init();
+        }
+
         while (!type2Unmarshaller.isEmpty()) {
             type2InitializedUnmarshaller.putAll(type2Unmarshaller);
             type2Unmarshaller.clear();
@@ -307,8 +313,16 @@ public class JaxbBeanUnmarshaller {
         }
 
         public <T extends AccessibleObject> void addElementRef(T accObj, Resolver<T> resolver) {
-            String globalName = resolveRootElementName(resolver.getPropertyType(accObj));
-            elementName2PropertyName.put(globalName, resolver.getPropertyName(accObj));
+            Class<?> propertyType = resolver.getPropertyType(accObj);
+            String propertyName = resolver.getPropertyName(accObj);
+
+            for (Entry<Class<?>, String> entry : globalType2Name.entrySet()) {
+                Class<?> globalType = entry.getKey();
+                if (propertyType.isAssignableFrom(globalType)) {
+                    String globalName = entry.getValue();
+                    elementName2PropertyName.put(globalName, propertyName);
+                }
+            }
         }
 
         private <T extends AccessibleObject> void setTextContent(T accObj, Resolver<T> resolver) {

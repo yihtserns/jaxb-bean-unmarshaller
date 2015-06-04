@@ -514,6 +514,28 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(result.getChild().getNote().getText(), is("A child"));
     }
 
+    @Test
+    public void canUnmarshalXmlElementRefSublasses() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class, JaxbObject2.class);
+
+        {
+            String xml = "<secondJaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                    + "  <jaxbObject displayName=\"First ref\"/>\n"
+                    + "</secondJaxbObject>";
+
+            JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
+            assertThat(((JaxbObject) result.getMultiGlobalChild()).getId(), is("First ref"));
+        }
+        {
+            String xml = "<secondJaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                    + "  <secondJaxbObject valid=\"true\"/>\n"
+                    + "</secondJaxbObject>";
+
+            JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
+            assertThat(((JaxbObject2) result.getMultiGlobalChild()).isValid(), is(true));
+        }
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -851,9 +873,19 @@ public class JaxbBeanUnmarshallerTest {
 
     }
 
-    @XmlRootElement(name = "secondJaxbObject")
+    @XmlRootElement(name = "secondJaxbObject", namespace = "http://example.com/jaxb")
     private static final class JaxbObject2 extends JaxbParent {
 
+        @XmlElementRef
+        private JaxbParent multiGlobalChild;
+
+        public JaxbParent getMultiGlobalChild() {
+            return multiGlobalChild;
+        }
+
+        public void setMultiGlobalChild(JaxbParent multiGlobalChild) {
+            this.multiGlobalChild = multiGlobalChild;
+        }
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
