@@ -198,7 +198,7 @@ public class JaxbBeanUnmarshaller {
         Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
         Map<String, Unmarshaller> localName2Unmarshaller = new HashMap<String, Unmarshaller>();
         String textContentPropertyName = null;
-        Class<?> beanClass;
+        final Class<?> beanClass;
         Constructor constructor;
 
         private BeanUnmarshaller(Constructor constructor) {
@@ -330,11 +330,13 @@ public class JaxbBeanUnmarshaller {
         }
 
         public void init() throws Exception {
-            while (beanClass != Object.class) {
-                XmlAccessorType xmlAccessorType = beanClass.getAnnotation(XmlAccessorType.class);
+            Class<?> currentClass = beanClass;
+
+            while (currentClass != Object.class) {
+                XmlAccessorType xmlAccessorType = currentClass.getAnnotation(XmlAccessorType.class);
                 Resolver resolver = getResolverFor(xmlAccessorType);
 
-                for (AccessibleObject accObj : resolver.getDirectMembers(beanClass)) {
+                for (AccessibleObject accObj : resolver.getDirectMembers(currentClass)) {
                     if (accObj.isAnnotationPresent(XmlAttribute.class)) {
                         addAttribute(accObj, resolver);
                     } else if (accObj.isAnnotationPresent(XmlElement.class)) {
@@ -352,7 +354,7 @@ public class JaxbBeanUnmarshaller {
                     }
                 }
 
-                beanClass = beanClass.getSuperclass();
+                currentClass = currentClass.getSuperclass();
             }
         }
 
