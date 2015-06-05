@@ -316,11 +316,20 @@ public class JaxbBeanUnmarshaller {
             Class<?> propertyType = resolver.getPropertyType(accObj);
             String propertyName = resolver.getPropertyName(accObj);
 
+            boolean isListType = (propertyType == List.class);
+            if (isListType) {
+                Type genericType = resolver.getGenericType(accObj);
+                propertyType = (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+            }
+
             for (Entry<Class<?>, String> entry : globalType2Name.entrySet()) {
                 Class<?> globalType = entry.getKey();
                 if (propertyType.isAssignableFrom(globalType)) {
                     String globalName = entry.getValue();
                     elementName2PropertyName.put(globalName, propertyName);
+                    if (isListType) {
+                        listTypeElementNames.add(globalName);
+                    }
                 }
             }
         }
