@@ -570,6 +570,18 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(((Message) notes.get(2)).getText(), is("2nd rev: Reduce power"));
     }
 
+    @Test
+    public void shouldNotConfuseLocalElementForGlobalElementWithSameName() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject2.class, Annotation.class);
+
+        String xml = "<secondJaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <annotation>WIP</annotation>"
+                + "</secondJaxbObject>";
+
+        JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getAnnotation().getText(), is("WIP"));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -932,6 +944,8 @@ public class JaxbBeanUnmarshallerTest {
 
         @XmlElementRef
         private JaxbParent multiGlobalChild;
+        @XmlElement
+        private SideNote annotation;
 
         public JaxbParent getMultiGlobalChild() {
             return multiGlobalChild;
@@ -939,6 +953,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setMultiGlobalChild(JaxbParent multiGlobalChild) {
             this.multiGlobalChild = multiGlobalChild;
+        }
+
+        public SideNote getAnnotation() {
+            return annotation;
+        }
+
+        public void setAnnotation(SideNote annotation) {
+            this.annotation = annotation;
         }
     }
 
@@ -948,6 +970,9 @@ public class JaxbBeanUnmarshallerTest {
 
     @XmlRootElement
     private static class Annotation extends Note {
+    }
+
+    private static class SideNote extends Note {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)

@@ -228,9 +228,9 @@ public class JaxbBeanUnmarshaller {
                 Element childElement = (Element) item;
                 String localName = item.getLocalName();
 
-                Unmarshaller childUnmarshaller = globalName2Unmarshaller.get(localName);
+                Unmarshaller childUnmarshaller = localName2Unmarshaller.get(localName);
                 if (childUnmarshaller == null) {
-                    childUnmarshaller = localName2Unmarshaller.get(localName);
+                    childUnmarshaller = globalName2Unmarshaller.get(localName);
                 }
 
                 Object childInstance = childUnmarshaller.unmarshal(childElement);
