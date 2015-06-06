@@ -281,8 +281,7 @@ public class JaxbBeanUnmarshaller {
 
             Class<?> type = resolver.getPropertyType(accObj);
             if (type == List.class) {
-                Type genericType = resolver.getGenericType(accObj);
-                type = (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+                type = resolver.getListComponentType(accObj);
 
                 if (!wrapped) {
                     listTypeElementNames.add(elementName);
@@ -325,8 +324,7 @@ public class JaxbBeanUnmarshaller {
 
             boolean isListType = (propertyType == List.class);
             if (isListType) {
-                Type genericType = resolver.getGenericType(accObj);
-                propertyType = (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+                propertyType = resolver.getListComponentType(accObj);
             }
 
             for (Entry<Class<?>, String> entry : globalType2Name.entrySet()) {
@@ -467,5 +465,10 @@ public class JaxbBeanUnmarshaller {
         public abstract Class<?> getPropertyType(T t);
 
         public abstract Type getGenericType(T t);
+
+        public Class<?> getListComponentType(T t) {
+            Type genericType = getGenericType(t);
+            return (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+        }
     }
 }
