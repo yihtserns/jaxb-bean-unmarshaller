@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -236,15 +237,17 @@ public class JaxbBeanUnmarshaller {
                 String propertyName = resolvePropertyName(childElement);
 
                 if (listTypeElementNames.contains(localName)) {
-                    List valueList = (List) bean.getPropertyValue(propertyName);
+                    Object valueList = bean.getPropertyValue(propertyName);
                     if (valueList == null) {
                         valueList = new ArrayList();
-                        bean.setPropertyValue(propertyName, valueList);
+                    } else if (valueList.getClass().isArray()) {
+                        valueList = new ArrayList(Arrays.asList((Object[]) valueList));
                     }
-                    valueList.add(childInstance);
-                } else {
-                    bean.setPropertyValue(propertyName, childInstance);
+
+                    ((List) valueList).add(childInstance);
+                    childInstance = valueList;
                 }
+                bean.setPropertyValue(propertyName, childInstance);
             }
             if (textContentPropertyName != null) {
                 bean.setPropertyValue(textContentPropertyName, element.getTextContent());
@@ -284,6 +287,10 @@ public class JaxbBeanUnmarshaller {
                 if (!wrapped) {
                     listTypeElementNames.add(elementName);
                 }
+            } else if (type.isArray()) {
+                type = type.getComponentType();
+
+                listTypeElementNames.add(elementName);
             }
 
             Class<?> elementType = xmlElement.type();

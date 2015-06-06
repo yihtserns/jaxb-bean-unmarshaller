@@ -287,6 +287,23 @@ public class JaxbBeanUnmarshallerTest {
     }
 
     @Test
+    public void canUnmarshalArrayChildElement() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
+
+        String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <childrenArray valid=\"true\"/>\n"
+                + "  <childrenArray valid=\"false\"/>\n"
+                + "  <childrenArray valid=\"true\"/>\n"
+                + "</jaxbObject>";
+
+        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getChildrenArray(), arrayWithSize(3));
+        assertThat(result.getChildrenArray()[0].isValid(), is(true));
+        assertThat(result.getChildrenArray()[1].isValid(), is(false));
+        assertThat(result.getChildrenArray()[2].isValid(), is(true));
+    }
+
+    @Test
     public void canUnmarshalListChildElement() throws Exception {
         JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
 
@@ -672,6 +689,8 @@ public class JaxbBeanUnmarshallerTest {
         @XmlElement(name = "parentChildWithName")
         private JaxbChild namedParentChild;
         @XmlElement
+        private JaxbChild[] childrenArray;
+        @XmlElement
         private List<JaxbChild> children;
         @XmlElement(name = "alias")
         private List<String> aliases;
@@ -719,6 +738,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setNamedParentChild(JaxbChild namedParentChild) {
             this.namedParentChild = namedParentChild;
+        }
+
+        public JaxbChild[] getChildrenArray() {
+            return childrenArray;
+        }
+
+        public void setChildrenArray(JaxbChild[] childrenArray) {
+            this.childrenArray = childrenArray;
         }
 
         public List<JaxbChild> getChildren() {
