@@ -564,7 +564,7 @@ public class JaxbBeanUnmarshallerTest {
                 + "</jaxbObject>";
 
         JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
-        List<Note> notes = result.getNotes();
+        List<Note<?>> notes = result.getNotes();
         assertThat(((Message) notes.get(0)).getText(), is("1st rev: An object"));
         assertThat(((Annotation) notes.get(1)).getText(), is("Dangerous one"));
         assertThat(((Message) notes.get(2)).getText(), is("2nd rev: Reduce power"));
@@ -602,7 +602,7 @@ public class JaxbBeanUnmarshallerTest {
         @XmlElementRef
         private JaxbObject2 globalChild;
         @XmlElementRef
-        private List<Note> notes;
+        private List<Note<?>> notes;
         @XmlElement(name = "childWithName")
         private JaxbChild namedChild;
         @XmlElement(type = JaxbChild.class)
@@ -650,11 +650,11 @@ public class JaxbBeanUnmarshallerTest {
             this.globalChild = globalChild;
         }
 
-        public List<Note> getNotes() {
+        public List<Note<?>> getNotes() {
             return notes;
         }
 
-        public void setNotes(List<Note> notes) {
+        public void setNotes(List<Note<?>> notes) {
             this.notes = notes;
         }
 
@@ -976,7 +976,7 @@ public class JaxbBeanUnmarshallerTest {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    private static class Note {
+    private static class Note<T> {
 
         @XmlValue
         private String text;

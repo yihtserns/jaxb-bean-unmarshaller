@@ -467,8 +467,14 @@ public class JaxbBeanUnmarshaller {
         public abstract Type getGenericType(T t);
 
         public Class<?> getListComponentType(T t) {
-            Type genericType = getGenericType(t);
-            return (Class) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+            Type type = getGenericType(t);
+            type = ((ParameterizedType) type).getActualTypeArguments()[0];
+
+            if (type instanceof ParameterizedType) {
+                type = ((ParameterizedType) type).getRawType();
+            }
+
+            return (Class) type;
         }
     }
 }
