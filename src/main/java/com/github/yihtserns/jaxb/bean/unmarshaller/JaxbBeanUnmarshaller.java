@@ -225,7 +225,7 @@ public class JaxbBeanUnmarshaller {
                 }
                 String attributeName = attr.getName();
 
-                String propertyName = resolvePropertyName(attributeName);
+                String propertyName = attributeName2PropertyName.get(attributeName);
                 Object value = attr.getValue();
 
                 XmlAdapter adapter = attributeName2Adapter.get(attributeName);
@@ -250,7 +250,7 @@ public class JaxbBeanUnmarshaller {
                 }
 
                 Object childInstance = childUnmarshaller.unmarshal(childElement);
-                String propertyName = resolvePropertyName(childElement);
+                String propertyName = elementName2PropertyName.get(localName);
 
                 if (listTypeElementNames.contains(localName)) {
                     Object valueList = bean.getPropertyValue(propertyName);
@@ -353,9 +353,7 @@ public class JaxbBeanUnmarshaller {
                 childUnmarshaller = wrapperUnmarshaller;
             }
 
-            if (!elementName.equals(propertyName)) {
-                elementName2PropertyName.put(elementName, propertyName);
-            }
+            elementName2PropertyName.put(elementName, propertyName);
             localName2Unmarshaller.put(elementName, childUnmarshaller);
         }
 
@@ -417,19 +415,6 @@ public class JaxbBeanUnmarshaller {
         private boolean isNamespaceDeclaration(Attr attr) {
             String fullName = attr.getName();
             return fullName.equals("xmlns") || fullName.startsWith("xmlns:");
-        }
-
-        private String resolvePropertyName(String attributeName) {
-            String propertyName = attributeName2PropertyName.get(attributeName);
-
-            return propertyName != null ? propertyName : attributeName;
-        }
-
-        private String resolvePropertyName(Element element) {
-            String elementName = element.getLocalName();
-            String propertyName = elementName2PropertyName.get(elementName);
-
-            return propertyName != null ? propertyName : elementName;
         }
     }
 
