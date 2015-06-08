@@ -25,6 +25,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -82,10 +83,11 @@ public class JaxbBeanUnmarshaller {
 
     private void init() throws Exception {
         while (!type2Unmarshaller.isEmpty()) {
+            Collection<Unmarshaller> toBeInitialized = new ArrayList(type2Unmarshaller.values());
             type2InitializedUnmarshaller.putAll(type2Unmarshaller);
             type2Unmarshaller.clear();
 
-            for (Unmarshaller unmarshaller : type2InitializedUnmarshaller.values()) {
+            for (Unmarshaller unmarshaller : toBeInitialized) {
                 unmarshaller.init();
             }
         }
