@@ -148,67 +148,33 @@ public class JaxbBeanUnmarshaller {
         }
 
         @Override
-        public Object unmarshal(Element element) throws Exception {
-            Object instance = constructor.newInstance();
-            BeanWrapper bean = PropertyAccessorFactory.forBeanPropertyAccess(instance);
-            NamedNodeMap attributes = element.getAttributes();
-            for (int i = 0; i < attributes.getLength(); i++) {
-                Attr attr = (Attr) attributes.item(i);
-                if (isNamespaceDeclaration(attr)) {
-                    continue;
-                }
-                String attributeName = attr.getName();
+        public void init() throws Exception {
+            Class<?> currentClass = beanClass;
 
-                String propertyName = attributeName2PropertyName.get(attributeName);
-                Object value = attr.getValue();
+            while (currentClass != Object.class) {
+                XmlAccessorType xmlAccessorType = currentClass.getAnnotation(XmlAccessorType.class);
+                PropertyResolver resolver = getResolverFor(xmlAccessorType);
 
-                XmlAdapter adapter = attributeName2Adapter.get(attributeName);
-                if (adapter != null) {
-                    value = adapter.unmarshal(value);
-                }
-
-                bean.setPropertyValue(propertyName, value);
-            }
-            NodeList childNodes = element.getChildNodes();
-            for (int i = 0; i < childNodes.getLength(); i++) {
-                Node item = childNodes.item(i);
-                if (item.getNodeType() != Node.ELEMENT_NODE) {
-                    continue;
-                }
-                Element childElement = (Element) item;
-                String localName = item.getLocalName();
-
-                Unmarshaller childUnmarshaller = localName2Unmarshaller.get(localName);
-                if (childUnmarshaller == null) {
-                    childUnmarshaller = globalName2Unmarshaller.get(localName);
-                }
-
-                Object childInstance = childUnmarshaller.unmarshal(childElement);
-                String propertyName = elementName2PropertyName.get(localName);
-
-                if (listTypeElementNames.contains(localName)) {
-                    Object valueList = bean.getPropertyValue(propertyName);
-                    if (valueList == null) {
-                        valueList = new ArrayList();
-                    } else if (valueList.getClass().isArray()) {
-                        valueList = new ArrayList(Arrays.asList((Object[]) valueList));
+                for (AccessibleObject accObj : resolver.getDirectMembers(currentClass)) {
+                    if (accObj.isAnnotationPresent(XmlAttribute.class)) {
+                        addAttribute(accObj, resolver);
+                    } else if (accObj.isAnnotationPresent(XmlElement.class)) {
+                        XmlElement xmlElement = accObj.getAnnotation(XmlElement.class);
+                        addElement(xmlElement, accObj, resolver);
+                    } else if (accObj.isAnnotationPresent(XmlElements.class)) {
+                        XmlElements xmlElements = accObj.getAnnotation(XmlElements.class);
+                        for (XmlElement xmlElement : xmlElements.value()) {
+                            addElement(xmlElement, accObj, resolver);
+                        }
+                    } else if (accObj.isAnnotationPresent(XmlElementRef.class)) {
+                        addElementRef(accObj, resolver);
+                    } else if (accObj.isAnnotationPresent(XmlValue.class)) {
+                        setTextContent(accObj, resolver);
                     }
-
-                    ((List) valueList).add(childInstance);
-                    childInstance = valueList;
                 }
 
-                XmlAdapter adapter = localName2Adapter.get(localName);
-                if (adapter != null) {
-                    childInstance = adapter.unmarshal(childInstance);
-                }
-
-                bean.setPropertyValue(propertyName, childInstance);
+                currentClass = currentClass.getSuperclass();
             }
-            if (textContentPropertyName != null) {
-                bean.setPropertyValue(textContentPropertyName, element.getTextContent());
-            }
-            return instance;
         }
 
         public <T extends AccessibleObject> void addAttribute(T accObj, PropertyResolver<T> resolver) throws Exception {
@@ -316,36 +282,6 @@ public class JaxbBeanUnmarshaller {
             this.textContentPropertyName = resolver.getPropertyName(accObj);
         }
 
-        @Override
-        public void init() throws Exception {
-            Class<?> currentClass = beanClass;
-
-            while (currentClass != Object.class) {
-                XmlAccessorType xmlAccessorType = currentClass.getAnnotation(XmlAccessorType.class);
-                PropertyResolver resolver = getResolverFor(xmlAccessorType);
-
-                for (AccessibleObject accObj : resolver.getDirectMembers(currentClass)) {
-                    if (accObj.isAnnotationPresent(XmlAttribute.class)) {
-                        addAttribute(accObj, resolver);
-                    } else if (accObj.isAnnotationPresent(XmlElement.class)) {
-                        XmlElement xmlElement = accObj.getAnnotation(XmlElement.class);
-                        addElement(xmlElement, accObj, resolver);
-                    } else if (accObj.isAnnotationPresent(XmlElements.class)) {
-                        XmlElements xmlElements = accObj.getAnnotation(XmlElements.class);
-                        for (XmlElement xmlElement : xmlElements.value()) {
-                            addElement(xmlElement, accObj, resolver);
-                        }
-                    } else if (accObj.isAnnotationPresent(XmlElementRef.class)) {
-                        addElementRef(accObj, resolver);
-                    } else if (accObj.isAnnotationPresent(XmlValue.class)) {
-                        setTextContent(accObj, resolver);
-                    }
-                }
-
-                currentClass = currentClass.getSuperclass();
-            }
-        }
-
         private PropertyResolver getResolverFor(XmlAccessorType xmlAccessorType) throws UnsupportedOperationException {
             switch (xmlAccessorType.value()) {
                 case FIELD:
@@ -355,6 +291,70 @@ public class JaxbBeanUnmarshaller {
                 default:
                     throw new UnsupportedOperationException("XML Access Type not supported yet: " + xmlAccessorType.value());
             }
+        }
+
+        @Override
+        public Object unmarshal(Element element) throws Exception {
+            Object instance = constructor.newInstance();
+            BeanWrapper bean = PropertyAccessorFactory.forBeanPropertyAccess(instance);
+            NamedNodeMap attributes = element.getAttributes();
+            for (int i = 0; i < attributes.getLength(); i++) {
+                Attr attr = (Attr) attributes.item(i);
+                if (isNamespaceDeclaration(attr)) {
+                    continue;
+                }
+                String attributeName = attr.getName();
+
+                String propertyName = attributeName2PropertyName.get(attributeName);
+                Object value = attr.getValue();
+
+                XmlAdapter adapter = attributeName2Adapter.get(attributeName);
+                if (adapter != null) {
+                    value = adapter.unmarshal(value);
+                }
+
+                bean.setPropertyValue(propertyName, value);
+            }
+            NodeList childNodes = element.getChildNodes();
+            for (int i = 0; i < childNodes.getLength(); i++) {
+                Node item = childNodes.item(i);
+                if (item.getNodeType() != Node.ELEMENT_NODE) {
+                    continue;
+                }
+                Element childElement = (Element) item;
+                String localName = item.getLocalName();
+
+                Unmarshaller childUnmarshaller = localName2Unmarshaller.get(localName);
+                if (childUnmarshaller == null) {
+                    childUnmarshaller = globalName2Unmarshaller.get(localName);
+                }
+
+                Object childInstance = childUnmarshaller.unmarshal(childElement);
+                String propertyName = elementName2PropertyName.get(localName);
+
+                if (listTypeElementNames.contains(localName)) {
+                    Object valueList = bean.getPropertyValue(propertyName);
+                    if (valueList == null) {
+                        valueList = new ArrayList();
+                    } else if (valueList.getClass().isArray()) {
+                        valueList = new ArrayList(Arrays.asList((Object[]) valueList));
+                    }
+
+                    ((List) valueList).add(childInstance);
+                    childInstance = valueList;
+                }
+
+                XmlAdapter adapter = localName2Adapter.get(localName);
+                if (adapter != null) {
+                    childInstance = adapter.unmarshal(childInstance);
+                }
+
+                bean.setPropertyValue(propertyName, childInstance);
+            }
+            if (textContentPropertyName != null) {
+                bean.setPropertyValue(textContentPropertyName, element.getTextContent());
+            }
+            return instance;
         }
 
         private boolean isNamespaceDeclaration(Attr attr) {
