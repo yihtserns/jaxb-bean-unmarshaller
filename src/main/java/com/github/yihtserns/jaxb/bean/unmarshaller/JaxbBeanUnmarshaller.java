@@ -15,13 +15,11 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
+import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.InitializableUnmarshaller;
 import java.beans.Introspector;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -97,30 +95,20 @@ public class JaxbBeanUnmarshaller {
     }
 
     private Unmarshaller getUnmarshallerForType(Class<?> type) throws NoSuchMethodException {
-        InitializableUnmarshaller unmarshaller = type2InitializedUnmarshaller.get(type);
-        if (unmarshaller == null) {
-            unmarshaller = type2Unmarshaller.get(type);
+        if (type2InitializedUnmarshaller.containsKey(type)) {
+            return type2InitializedUnmarshaller.get(type);
         }
-        if (unmarshaller == null) {
-            if (type == String.class) {
-                unmarshaller = new StringUnmarshaller();
-            } else {
-                unmarshaller = new BeanUnmarshaller(type.getDeclaredConstructor());
-            }
-            type2Unmarshaller.put(type, unmarshaller);
+        if (type2Unmarshaller.containsKey(type)) {
+            return type2Unmarshaller.get(type);
         }
-        return unmarshaller;
-    }
+        if (type == String.class) {
+            return StringUnmarshaller.INSTANCE;
+        }
 
-    private Resolver getResolverFor(XmlAccessorType xmlAccessorType) throws UnsupportedOperationException {
-        switch (xmlAccessorType.value()) {
-            case FIELD:
-                return Resolver.FIELD;
-            case PROPERTY:
-                return Resolver.METHOD;
-            default:
-                throw new UnsupportedOperationException("XML Access Type not supported yet: " + xmlAccessorType.value());
-        }
+        InitializableUnmarshaller unmarshaller = new BeanUnmarshaller(type.getDeclaredConstructor());
+        type2Unmarshaller.put(type, unmarshaller);
+
+        return unmarshaller;
     }
 
     public static JaxbBeanUnmarshaller newInstance(Class<?>... types) throws Exception {
@@ -140,60 +128,6 @@ public class JaxbBeanUnmarshaller {
             name = Introspector.decapitalize(type.getSimpleName());
         }
         return name;
-    }
-
-    private interface Unmarshaller {
-
-        public Object unmarshal(Element element) throws Exception;
-    }
-
-    private interface InitializableUnmarshaller extends Unmarshaller {
-
-        public void init() throws Exception;
-    }
-
-    private class StringUnmarshaller implements InitializableUnmarshaller {
-
-        @Override
-        public Object unmarshal(Element element) {
-            return element.getTextContent();
-        }
-
-        @Override
-        public void init() {
-        }
-    }
-
-    private class WrapperUnmarshaller implements Unmarshaller {
-
-        private Map<String, Unmarshaller> localName2Unmarshaller = new HashMap<String, Unmarshaller>();
-
-        @Override
-        public Object unmarshal(Element element) throws Exception {
-            List<Object> result = new ArrayList<Object>();
-
-            NodeList childNodes = element.getChildNodes();
-            for (int i = 0; i < childNodes.getLength(); i++) {
-                Node item = childNodes.item(i);
-                if (item.getNodeType() != Node.ELEMENT_NODE) {
-                    continue;
-                }
-                Element childElement = (Element) item;
-                String localName = childElement.getLocalName();
-
-                Unmarshaller unmarshaller = localName2Unmarshaller.get(localName);
-                if (unmarshaller != null) {
-                    Object instance = unmarshaller.unmarshal(childElement);
-                    result.add(instance);
-                }
-            }
-
-            return result;
-        }
-
-        public void put(String localName, Unmarshaller unmarshaller) {
-            this.localName2Unmarshaller.put(localName, unmarshaller);
-        }
     }
 
     private class BeanUnmarshaller implements InitializableUnmarshaller {
@@ -277,7 +211,7 @@ public class JaxbBeanUnmarshaller {
             return instance;
         }
 
-        public <T extends AccessibleObject> void addAttribute(T accObj, Resolver<T> resolver) throws Exception {
+        public <T extends AccessibleObject> void addAttribute(T accObj, PropertyResolver<T> resolver) throws Exception {
             String propertyName = resolver.getPropertyName(accObj);
 
             String attributeName = accObj.getAnnotation(XmlAttribute.class).name();
@@ -296,7 +230,7 @@ public class JaxbBeanUnmarshaller {
             attributeName2PropertyName.put(attributeName, propertyName);
         }
 
-        public <T extends AccessibleObject> void addElement(XmlElement xmlElement, T accObj, Resolver<T> resolver) throws Exception {
+        public <T extends AccessibleObject> void addElement(XmlElement xmlElement, T accObj, PropertyResolver<T> resolver) throws Exception {
             String propertyName = resolver.getPropertyName(accObj);
 
             boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
@@ -357,7 +291,7 @@ public class JaxbBeanUnmarshaller {
             localName2Unmarshaller.put(elementName, childUnmarshaller);
         }
 
-        public <T extends AccessibleObject> void addElementRef(T accObj, Resolver<T> resolver) {
+        public <T extends AccessibleObject> void addElementRef(T accObj, PropertyResolver<T> resolver) {
             Class<?> propertyType = resolver.getPropertyType(accObj);
             String propertyName = resolver.getPropertyName(accObj);
 
@@ -378,7 +312,7 @@ public class JaxbBeanUnmarshaller {
             }
         }
 
-        private <T extends AccessibleObject> void setTextContent(T accObj, Resolver<T> resolver) {
+        private <T extends AccessibleObject> void setTextContent(T accObj, PropertyResolver<T> resolver) {
             this.textContentPropertyName = resolver.getPropertyName(accObj);
         }
 
@@ -388,7 +322,7 @@ public class JaxbBeanUnmarshaller {
 
             while (currentClass != Object.class) {
                 XmlAccessorType xmlAccessorType = currentClass.getAnnotation(XmlAccessorType.class);
-                Resolver resolver = getResolverFor(xmlAccessorType);
+                PropertyResolver resolver = getResolverFor(xmlAccessorType);
 
                 for (AccessibleObject accObj : resolver.getDirectMembers(currentClass)) {
                     if (accObj.isAnnotationPresent(XmlAttribute.class)) {
@@ -412,85 +346,20 @@ public class JaxbBeanUnmarshaller {
             }
         }
 
+        private PropertyResolver getResolverFor(XmlAccessorType xmlAccessorType) throws UnsupportedOperationException {
+            switch (xmlAccessorType.value()) {
+                case FIELD:
+                    return PropertyResolver.FIELD;
+                case PROPERTY:
+                    return PropertyResolver.METHOD;
+                default:
+                    throw new UnsupportedOperationException("XML Access Type not supported yet: " + xmlAccessorType.value());
+            }
+        }
+
         private boolean isNamespaceDeclaration(Attr attr) {
             String fullName = attr.getName();
             return fullName.equals("xmlns") || fullName.startsWith("xmlns:");
-        }
-    }
-
-    private static abstract class Resolver<T extends AccessibleObject> {
-
-        public static final Resolver<Method> METHOD = new Resolver<Method>() {
-
-            @Override
-            public AccessibleObject[] getDirectMembers(Class<?> type) {
-                return type.getDeclaredMethods();
-            }
-
-            public String getPropertyName(Method method) {
-                String propertyName = method.getName();
-                if (propertyName.startsWith("is")) {
-                    propertyName = propertyName.substring(2);
-                } else {
-                    // Assume is setXXX/getXXX
-                    propertyName = propertyName.substring(3);
-                }
-
-                return Introspector.decapitalize(propertyName);
-            }
-
-            public Class<?> getPropertyType(Method method) {
-                return isSetter(method) ? method.getParameterTypes()[0] : method.getReturnType();
-            }
-
-            @Override
-            public Type getGenericType(Method method) {
-                return isSetter(method) ? method.getGenericParameterTypes()[0] : method.getGenericReturnType();
-            }
-
-            private boolean isSetter(Method method) {
-                return method.getName().startsWith("set");
-            }
-        };
-
-        private static final Resolver<Field> FIELD = new Resolver<Field>() {
-
-            @Override
-            public AccessibleObject[] getDirectMembers(Class<?> type) {
-                return type.getDeclaredFields();
-            }
-
-            public String getPropertyName(Field field) {
-                return field.getName();
-            }
-
-            public Class<?> getPropertyType(Field field) {
-                return field.getType();
-            }
-
-            @Override
-            public Type getGenericType(Field field) {
-                return field.getGenericType();
-            }
-        };
-
-        public abstract AccessibleObject[] getDirectMembers(Class<?> type);
-
-        public abstract String getPropertyName(T t);
-
-        public abstract Class<?> getPropertyType(T t);
-
-        public abstract Type getGenericType(T t);
-
-        public Class<?> getListComponentType(T t) {
-            Type type = getGenericType(t);
-            type = ((ParameterizedType) type).getActualTypeArguments()[0];
-
-            if (type instanceof ParameterizedType) {
-                type = ((ParameterizedType) type).getRawType();
-            }
-
-            return (Class) type;
         }
     }
 }
