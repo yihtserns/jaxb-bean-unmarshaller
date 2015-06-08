@@ -613,7 +613,7 @@ public class JaxbBeanUnmarshallerTest {
     }
 
     @XmlRootElement(namespace = "http://example.com/jaxb")
-    private static final class JaxbObject extends JaxbParent {
+    static final class JaxbObject extends JaxbParent {
 
         @XmlAttribute(name = "displayName")
         private String id;
@@ -923,7 +923,7 @@ public class JaxbBeanUnmarshallerTest {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    private static final class JaxbChild extends JaxbParent {
+    static final class JaxbChild extends JaxbParent {
 
         @XmlAttribute
         private String name;
@@ -957,12 +957,12 @@ public class JaxbBeanUnmarshallerTest {
         }
     }
 
-    private static final class JaxbChild2 extends JaxbParent {
+    static final class JaxbChild2 extends JaxbParent {
 
     }
 
     @XmlRootElement(name = "secondJaxbObject", namespace = "http://example.com/jaxb")
-    private static final class JaxbObject2 extends JaxbParent {
+    static final class JaxbObject2 extends JaxbParent {
 
         @XmlElementRef
         private JaxbParent multiGlobalChild;
@@ -998,18 +998,18 @@ public class JaxbBeanUnmarshallerTest {
     }
 
     @XmlRootElement
-    private static class Message extends Note {
+    static class Message extends Note {
     }
 
     @XmlRootElement
-    private static class Annotation extends Note {
+    static class Annotation extends Note {
     }
 
-    private static class SideNote extends Note {
+    static class SideNote extends Note {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    private static class Note<T> {
+    static class Note<T> {
 
         @XmlValue
         private String text;
@@ -1024,7 +1024,7 @@ public class JaxbBeanUnmarshallerTest {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    private static class Metadata {
+    static class Metadata {
 
         @XmlElement(name = "entry")
         private List<Entry> entries;

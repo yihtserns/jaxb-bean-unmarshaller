@@ -19,7 +19,6 @@ import java.beans.Introspector;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -229,7 +228,7 @@ public class JaxbBeanUnmarshaller {
         }
 
         public Object unmarshal(Element element) throws Exception {
-            Object instance = newInstance();
+            Object instance = constructor.newInstance();
             BeanWrapper bean = PropertyAccessorFactory.forBeanPropertyAccess(instance);
             NamedNodeMap attributes = element.getAttributes();
             for (int i = 0; i < attributes.getLength(); i++) {
@@ -408,16 +407,6 @@ public class JaxbBeanUnmarshaller {
         private boolean isNamespaceDeclaration(Attr attr) {
             String fullName = attr.getName();
             return fullName.equals("xmlns") || fullName.startsWith("xmlns:");
-        }
-
-        private Object newInstance() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-            boolean originalAccessibility = constructor.isAccessible();
-            try {
-                constructor.setAccessible(true);
-                return constructor.newInstance();
-            } finally {
-                constructor.setAccessible(originalAccessibility);
-            }
         }
 
         private String resolvePropertyName(Attr attribute) {
