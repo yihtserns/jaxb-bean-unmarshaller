@@ -27,6 +27,18 @@ interface Unmarshaller {
 
     interface InitializableUnmarshaller extends Unmarshaller {
 
-        public void init() throws Exception;
+        public void init(Provider unmarshallerFactory) throws Exception;
+    }
+
+    interface Provider {
+
+        Unmarshaller getUnmarshallerForType(Class<?> type) throws Exception;
+
+        void forGlobalUnmarshallerCompatibleWith(Class<?> type, Handler handler);
+
+        interface Handler {
+
+            void handle(String globalName, Unmarshaller unmarshaller);
+        }
     }
 }
