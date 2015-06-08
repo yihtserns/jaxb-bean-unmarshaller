@@ -588,7 +588,7 @@ public class JaxbBeanUnmarshallerTest {
     }
 
     @Test
-    public void canUnmarshalWithXmlJavaTypeAdapter() throws Exception {
+    public void canUnmarshalElementWithXmlJavaTypeAdapter() throws Exception {
         JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject2.class);
 
         String xml = "<secondJaxbObject xmlns=\"http://example.com/jaxb\">\n"
@@ -602,6 +602,19 @@ public class JaxbBeanUnmarshallerTest {
         Map<String, String> metadata = result.getMetadata();
         assertThat(metadata, hasEntry("author", "Me"));
         assertThat(metadata, hasEntry("obsolete", "Yes"));
+    }
+
+    @Test
+    public void canUnmarshalAttributeWithXmlJavaTypeAdapter() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject2.class);
+
+        String xml = "<secondJaxbObject"
+                + "      xmlns=\"http://example.com/jaxb\""
+                + "      annotationAttr=\"WIP\">\n"
+                + "</secondJaxbObject>";
+
+        JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
+        assertThat(result.getAnnotationAttr().getText(), is("WIP"));
     }
 
     private static Element toElement(String xml) throws Exception {
@@ -966,6 +979,9 @@ public class JaxbBeanUnmarshallerTest {
 
         @XmlElementRef
         private JaxbParent multiGlobalChild;
+        @XmlJavaTypeAdapter(SideNote.Adapter.class)
+        @XmlAttribute
+        private SideNote annotationAttr;
         @XmlElement
         private SideNote annotation;
         @XmlJavaTypeAdapter(Metadata.Adapter.class)
@@ -978,6 +994,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setMultiGlobalChild(JaxbParent multiGlobalChild) {
             this.multiGlobalChild = multiGlobalChild;
+        }
+
+        public SideNote getAnnotationAttr() {
+            return annotationAttr;
+        }
+
+        public void setAnnotationAttr(SideNote annotationAttr) {
+            this.annotationAttr = annotationAttr;
         }
 
         public SideNote getAnnotation() {
@@ -1006,6 +1030,22 @@ public class JaxbBeanUnmarshallerTest {
     }
 
     static class SideNote extends Note {
+
+        public static final class Adapter extends XmlAdapter<String, SideNote> {
+
+            @Override
+            public SideNote unmarshal(String vt) throws Exception {
+                SideNote sideNote = new SideNote();
+                sideNote.setText(vt);
+
+                return sideNote;
+            }
+
+            @Override
+            public String marshal(SideNote bt) throws Exception {
+                return bt.getText();
+            }
+        }
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)

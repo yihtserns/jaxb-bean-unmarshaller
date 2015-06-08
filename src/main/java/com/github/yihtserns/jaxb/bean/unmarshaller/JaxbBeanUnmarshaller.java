@@ -219,6 +219,7 @@ public class JaxbBeanUnmarshaller {
         Set<String> listTypeElementNames = new HashSet<String>();
         Map<String, String> elementName2PropertyName = new HashMap<String, String>();
         Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
+        Map<String, XmlAdapter> attributeName2Adapter = new HashMap<String, XmlAdapter>();
         Map<String, Unmarshaller> localName2Unmarshaller = new HashMap<String, Unmarshaller>();
         String textContentPropertyName = null;
         final Class<?> beanClass;
@@ -239,8 +240,17 @@ public class JaxbBeanUnmarshaller {
                 if (isNamespaceDeclaration(attr)) {
                     continue;
                 }
-                String propertyName = resolvePropertyName(attr);
-                bean.setPropertyValue(propertyName, attr.getValue());
+                String attributeName = attr.getName();
+
+                String propertyName = resolvePropertyName(attributeName);
+                Object value = attr.getValue();
+
+                XmlAdapter adapter = attributeName2Adapter.get(attributeName);
+                if (adapter != null) {
+                    value = adapter.unmarshal(value);
+                }
+
+                bean.setPropertyValue(propertyName, value);
             }
             NodeList childNodes = element.getChildNodes();
             for (int i = 0; i < childNodes.getLength(); i++) {
@@ -278,13 +288,23 @@ public class JaxbBeanUnmarshaller {
             return instance;
         }
 
-        public <T extends AccessibleObject> void addAttribute(T accObj, Resolver<T> resolver) {
+        public <T extends AccessibleObject> void addAttribute(T accObj, Resolver<T> resolver) throws Exception {
             String propertyName = resolver.getPropertyName(accObj);
 
             String attributeName = accObj.getAnnotation(XmlAttribute.class).name();
-            if (!attributeName.equals(AUTO_GENERATED_NAME)) {
-                attributeName2PropertyName.put(attributeName, propertyName);
+            if (attributeName.equals(AUTO_GENERATED_NAME)) {
+                attributeName = propertyName;
             }
+
+            if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
+                XmlJavaTypeAdapter xmlJavaTypeAdapter = accObj.getAnnotation(XmlJavaTypeAdapter.class);
+                Class<? extends XmlAdapter> adapterClass = xmlJavaTypeAdapter.value();
+                XmlAdapter adapter = adapterClass.newInstance();
+
+                attributeName2Adapter.put(attributeName, adapter);
+            }
+
+            attributeName2PropertyName.put(attributeName, propertyName);
         }
 
         public <T extends AccessibleObject> void addElement(XmlElement xmlElement, T accObj, Resolver<T> resolver) throws Exception {
@@ -413,8 +433,7 @@ public class JaxbBeanUnmarshaller {
             return fullName.equals("xmlns") || fullName.startsWith("xmlns:");
         }
 
-        private String resolvePropertyName(Attr attribute) {
-            String attributeName = attribute.getName();
+        private String resolvePropertyName(String attributeName) {
             String propertyName = attributeName2PropertyName.get(attributeName);
 
             return propertyName != null ? propertyName : attributeName;
