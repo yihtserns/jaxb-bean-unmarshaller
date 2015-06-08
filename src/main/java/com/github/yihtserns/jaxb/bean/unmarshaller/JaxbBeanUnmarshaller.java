@@ -58,8 +58,10 @@ public class JaxbBeanUnmarshaller {
     private static final String AUTO_GENERATED_NAME = "##default";
     private Map<String, Unmarshaller> globalName2Unmarshaller = new HashMap<String, Unmarshaller>();
     private Map<Class<?>, String> globalType2Name = new HashMap<Class<?>, String>();
-    private Map<Class<?>, Unmarshaller> type2Unmarshaller = new HashMap<Class<?>, Unmarshaller>();
-    private Map<Class<?>, Unmarshaller> type2InitializedUnmarshaller = new HashMap<Class<?>, Unmarshaller>();
+    private Map<Class<?>, InitializableUnmarshaller> type2Unmarshaller
+            = new HashMap<Class<?>, InitializableUnmarshaller>();
+    private Map<Class<?>, InitializableUnmarshaller> type2InitializedUnmarshaller
+            = new HashMap<Class<?>, InitializableUnmarshaller>();
 
     /**
      * @see #newInstance(java.lang.Class...)
@@ -84,18 +86,18 @@ public class JaxbBeanUnmarshaller {
 
     private void init() throws Exception {
         while (!type2Unmarshaller.isEmpty()) {
-            Collection<Unmarshaller> toBeInitialized = new ArrayList(type2Unmarshaller.values());
+            Collection<InitializableUnmarshaller> toBeInitialized = new ArrayList(type2Unmarshaller.values());
             type2InitializedUnmarshaller.putAll(type2Unmarshaller);
             type2Unmarshaller.clear();
 
-            for (Unmarshaller unmarshaller : toBeInitialized) {
+            for (InitializableUnmarshaller unmarshaller : toBeInitialized) {
                 unmarshaller.init();
             }
         }
     }
 
     private Unmarshaller getUnmarshallerForType(Class<?> type) throws NoSuchMethodException {
-        Unmarshaller unmarshaller = type2InitializedUnmarshaller.get(type);
+        InitializableUnmarshaller unmarshaller = type2InitializedUnmarshaller.get(type);
         if (unmarshaller == null) {
             unmarshaller = type2Unmarshaller.get(type);
         }
@@ -143,16 +145,21 @@ public class JaxbBeanUnmarshaller {
     private interface Unmarshaller {
 
         public Object unmarshal(Element element) throws Exception;
+    }
+
+    private interface InitializableUnmarshaller extends Unmarshaller {
 
         public void init() throws Exception;
     }
 
-    private class StringUnmarshaller implements Unmarshaller {
+    private class StringUnmarshaller implements InitializableUnmarshaller {
 
+        @Override
         public Object unmarshal(Element element) {
             return element.getTextContent();
         }
 
+        @Override
         public void init() {
         }
     }
@@ -167,21 +174,19 @@ public class JaxbBeanUnmarshaller {
             this.converter = converter;
         }
 
+        @Override
         public Object unmarshal(Element element) throws Exception {
             Object instance = delegate.unmarshal(element);
 
             return converter.unmarshal(instance);
         }
-
-        public void init() throws Exception {
-        }
-
     }
 
     private class WrapperUnmarshaller implements Unmarshaller {
 
         private Map<String, Unmarshaller> localName2Unmarshaller = new HashMap<String, Unmarshaller>();
 
+        @Override
         public Object unmarshal(Element element) throws Exception {
             List<Object> result = new ArrayList<Object>();
 
@@ -207,12 +212,9 @@ public class JaxbBeanUnmarshaller {
         public void put(String localName, Unmarshaller unmarshaller) {
             this.localName2Unmarshaller.put(localName, unmarshaller);
         }
-
-        public void init() throws Exception {
-        }
     }
 
-    private class BeanUnmarshaller implements Unmarshaller {
+    private class BeanUnmarshaller implements InitializableUnmarshaller {
 
         Set<String> listTypeElementNames = new HashSet<String>();
         Map<String, String> elementName2PropertyName = new HashMap<String, String>();
@@ -227,6 +229,7 @@ public class JaxbBeanUnmarshaller {
             this.constructor = constructor;
         }
 
+        @Override
         public Object unmarshal(Element element) throws Exception {
             Object instance = constructor.newInstance();
             BeanWrapper bean = PropertyAccessorFactory.forBeanPropertyAccess(instance);
@@ -375,6 +378,7 @@ public class JaxbBeanUnmarshaller {
             this.textContentPropertyName = resolver.getPropertyName(accObj);
         }
 
+        @Override
         public void init() throws Exception {
             Class<?> currentClass = beanClass;
 
