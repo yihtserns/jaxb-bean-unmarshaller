@@ -16,7 +16,10 @@
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -26,6 +29,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.hamcrest.Matcher;
 import org.junit.Test;
@@ -582,6 +587,23 @@ public class JaxbBeanUnmarshallerTest {
         assertThat(result.getAnnotation().getText(), is("WIP"));
     }
 
+    @Test
+    public void canUnmarshalWithXmlJavaTypeAdapter() throws Exception {
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject2.class);
+
+        String xml = "<secondJaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <metadata>\n"
+                + "    <entry key=\"author\" value=\"Me\"/>\n"
+                + "    <entry key=\"obsolete\" value=\"Yes\"/>\n"
+                + "  </metadata>\n"
+                + "</secondJaxbObject>";
+
+        JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
+        Map<String, String> metadata = result.getMetadata();
+        assertThat(metadata, hasEntry("author", "Me"));
+        assertThat(metadata, hasEntry("obsolete", "Yes"));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -946,6 +968,9 @@ public class JaxbBeanUnmarshallerTest {
         private JaxbParent multiGlobalChild;
         @XmlElement
         private SideNote annotation;
+        @XmlJavaTypeAdapter(Metadata.Adapter.class)
+        @XmlElement
+        private Map<String, String> metadata;
 
         public JaxbParent getMultiGlobalChild() {
             return multiGlobalChild;
@@ -961,6 +986,14 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setAnnotation(SideNote annotation) {
             this.annotation = annotation;
+        }
+
+        public Map<String, String> getMetadata() {
+            return metadata;
+        }
+
+        public void setMetadata(Map<String, String> metadata) {
+            this.metadata = metadata;
         }
     }
 
@@ -987,6 +1020,78 @@ public class JaxbBeanUnmarshallerTest {
 
         public void setText(String text) {
             this.text = text;
+        }
+    }
+
+    @XmlAccessorType(XmlAccessType.FIELD)
+    private static class Metadata {
+
+        @XmlElement(name = "entry")
+        private List<Entry> entries;
+
+        public List<Entry> getEntries() {
+            return entries;
+        }
+
+        public void setEntries(List<Entry> entries) {
+            this.entries = entries;
+        }
+
+        @XmlAccessorType(XmlAccessType.FIELD)
+        public static class Entry {
+
+            @XmlAttribute
+            private String key;
+            @XmlAttribute
+            private String value;
+
+            public String getKey() {
+                return key;
+            }
+
+            public void setKey(String key) {
+                this.key = key;
+            }
+
+            public String getValue() {
+                return value;
+            }
+
+            public void setValue(String value) {
+                this.value = value;
+            }
+        }
+
+        public static final class Adapter extends XmlAdapter<Metadata, Map<String, String>> {
+
+            @Override
+            public Map<String, String> unmarshal(Metadata vt) throws Exception {
+                Map<String, String> result = new HashMap<String, String>();
+
+                for (Entry entry : vt.getEntries()) {
+                    result.put(entry.getKey(), entry.getValue());
+                }
+
+                return result;
+            }
+
+            @Override
+            public Metadata marshal(Map<String, String> bt) throws Exception {
+                List<Entry> entries = new ArrayList<Entry>();
+                for (Map.Entry<String, String> mapEntry : bt.entrySet()) {
+                    Entry entry = new Entry();
+                    entry.setKey(mapEntry.getKey());
+                    entry.setValue(mapEntry.getValue());
+
+                    entries.add(entry);
+                }
+
+                Metadata metadata = new Metadata();
+                metadata.setEntries(entries);
+
+                return metadata;
+            }
+
         }
     }
 }

@@ -40,6 +40,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.w3c.dom.Attr;
@@ -156,6 +158,27 @@ public class JaxbBeanUnmarshaller {
         }
     }
 
+    private class ConvertingUnmarshaller implements Unmarshaller {
+
+        private Unmarshaller delegate;
+        private XmlAdapter converter;
+
+        public ConvertingUnmarshaller(Unmarshaller delegate, XmlAdapter converter) {
+            this.delegate = delegate;
+            this.converter = converter;
+        }
+
+        public Object unmarshal(Element element) throws Exception {
+            Object instance = delegate.unmarshal(element);
+
+            return converter.unmarshal(instance);
+        }
+
+        public void init() throws Exception {
+        }
+
+    }
+
     private class WrapperUnmarshaller implements Unmarshaller {
 
         private Map<String, Unmarshaller> localName2Unmarshaller = new HashMap<String, Unmarshaller>();
@@ -262,7 +285,7 @@ public class JaxbBeanUnmarshaller {
             }
         }
 
-        public <T extends AccessibleObject> void addElement(XmlElement xmlElement, T accObj, Resolver<T> resolver) throws NoSuchMethodException {
+        public <T extends AccessibleObject> void addElement(XmlElement xmlElement, T accObj, Resolver<T> resolver) throws Exception {
             String propertyName = resolver.getPropertyName(accObj);
 
             boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
@@ -277,22 +300,31 @@ public class JaxbBeanUnmarshaller {
                 elementName = propertyName;
             }
 
+            XmlAdapter converter = null;
             Class<?> type = resolver.getPropertyType(accObj);
-            if (type == List.class) {
-                type = resolver.getListComponentType(accObj);
+            if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
+                XmlJavaTypeAdapter xmlJavaTypeAdapter = accObj.getAnnotation(XmlJavaTypeAdapter.class);
+                Class<? extends XmlAdapter> adapterClass = xmlJavaTypeAdapter.value();
 
-                if (!wrapped) {
+                type = (Class) ((ParameterizedType) adapterClass.getGenericSuperclass()).getActualTypeArguments()[0];
+                converter = adapterClass.newInstance();
+            } else {
+                if (type == List.class) {
+                    type = resolver.getListComponentType(accObj);
+
+                    if (!wrapped) {
+                        listTypeElementNames.add(elementName);
+                    }
+                } else if (type.isArray()) {
+                    type = type.getComponentType();
+
                     listTypeElementNames.add(elementName);
                 }
-            } else if (type.isArray()) {
-                type = type.getComponentType();
 
-                listTypeElementNames.add(elementName);
-            }
-
-            Class<?> elementType = xmlElement.type();
-            if (elementType != XmlElement.DEFAULT.class) {
-                type = elementType;
+                Class<?> elementType = xmlElement.type();
+                if (elementType != XmlElement.DEFAULT.class) {
+                    type = elementType;
+                }
             }
 
             Unmarshaller childUnmarshaller = getUnmarshallerForType(type);
@@ -308,6 +340,9 @@ public class JaxbBeanUnmarshaller {
                 }
                 wrapperUnmarshaller.put(wrappedElementName, childUnmarshaller);
                 childUnmarshaller = wrapperUnmarshaller;
+            }
+            if (converter != null) {
+                childUnmarshaller = new ConvertingUnmarshaller(childUnmarshaller, converter);
             }
 
             if (!elementName.equals(propertyName)) {
