@@ -164,24 +164,6 @@ public class JaxbBeanUnmarshaller {
         }
     }
 
-    private class ConvertingUnmarshaller implements Unmarshaller {
-
-        private Unmarshaller delegate;
-        private XmlAdapter converter;
-
-        public ConvertingUnmarshaller(Unmarshaller delegate, XmlAdapter converter) {
-            this.delegate = delegate;
-            this.converter = converter;
-        }
-
-        @Override
-        public Object unmarshal(Element element) throws Exception {
-            Object instance = delegate.unmarshal(element);
-
-            return converter.unmarshal(instance);
-        }
-    }
-
     private class WrapperUnmarshaller implements Unmarshaller {
 
         private Map<String, Unmarshaller> localName2Unmarshaller = new HashMap<String, Unmarshaller>();
@@ -221,6 +203,7 @@ public class JaxbBeanUnmarshaller {
         Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
         Map<String, XmlAdapter> attributeName2Adapter = new HashMap<String, XmlAdapter>();
         Map<String, Unmarshaller> localName2Unmarshaller = new HashMap<String, Unmarshaller>();
+        Map<String, XmlAdapter> localName2Adapter = new HashMap<String, XmlAdapter>();
         String textContentPropertyName = null;
         final Class<?> beanClass;
         Constructor constructor;
@@ -280,6 +263,12 @@ public class JaxbBeanUnmarshaller {
                     ((List) valueList).add(childInstance);
                     childInstance = valueList;
                 }
+
+                XmlAdapter adapter = localName2Adapter.get(localName);
+                if (adapter != null) {
+                    childInstance = adapter.unmarshal(childInstance);
+                }
+
                 bean.setPropertyValue(propertyName, childInstance);
             }
             if (textContentPropertyName != null) {
@@ -322,14 +311,14 @@ public class JaxbBeanUnmarshaller {
                 elementName = propertyName;
             }
 
-            XmlAdapter converter = null;
             Class<?> type = resolver.getPropertyType(accObj);
             if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
                 XmlJavaTypeAdapter xmlJavaTypeAdapter = accObj.getAnnotation(XmlJavaTypeAdapter.class);
                 Class<? extends XmlAdapter> adapterClass = xmlJavaTypeAdapter.value();
+                XmlAdapter adapter = adapterClass.newInstance();
+                localName2Adapter.put(elementName, adapter);
 
                 type = (Class) ((ParameterizedType) adapterClass.getGenericSuperclass()).getActualTypeArguments()[0];
-                converter = adapterClass.newInstance();
             } else {
                 if (type == List.class) {
                     type = resolver.getListComponentType(accObj);
@@ -362,9 +351,6 @@ public class JaxbBeanUnmarshaller {
                 }
                 wrapperUnmarshaller.put(wrappedElementName, childUnmarshaller);
                 childUnmarshaller = wrapperUnmarshaller;
-            }
-            if (converter != null) {
-                childUnmarshaller = new ConvertingUnmarshaller(childUnmarshaller, converter);
             }
 
             if (!elementName.equals(propertyName)) {
