@@ -74,17 +74,13 @@ public class JaxbBeanUnmarshaller {
 
     private void addGlobalType(Class<?> type) throws Exception {
         String elementName = resolveRootElementName(type);
-        BeanUnmarshaller unmarshaller = new BeanUnmarshaller(type.getDeclaredConstructor());
+        Unmarshaller unmarshaller = getUnmarshallerForType(type);
 
         globalName2Unmarshaller.put(elementName, unmarshaller);
         globalType2Name.put(type, elementName);
     }
 
     private void init() throws Exception {
-        for (Unmarshaller unmarshaller : globalName2Unmarshaller.values()) {
-            unmarshaller.init();
-        }
-
         while (!type2Unmarshaller.isEmpty()) {
             type2InitializedUnmarshaller.putAll(type2Unmarshaller);
             type2Unmarshaller.clear();
