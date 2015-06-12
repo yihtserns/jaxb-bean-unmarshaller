@@ -36,8 +36,6 @@ import org.hamcrest.Matcher;
 import org.junit.Test;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
@@ -46,9 +44,6 @@ import org.xml.sax.InputSource;
  * @author yihtserns
  */
 public class JaxbBeanUnmarshallerTest {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void canUnmarshalSingleObject() throws Exception {
