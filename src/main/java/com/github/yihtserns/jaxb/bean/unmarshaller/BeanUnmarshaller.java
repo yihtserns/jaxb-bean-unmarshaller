@@ -74,13 +74,11 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
                 if (accObj.isAnnotationPresent(XmlAttribute.class)) {
                     addAttribute(accObj, resolver);
                 } else if (accObj.isAnnotationPresent(XmlElement.class)) {
-                    XmlElement xmlElement = accObj.getAnnotation(XmlElement.class);
-                    addElement(xmlElement, accObj, resolver, unmarshallerProvider);
+                    XmlElement[] xmlElements = {accObj.getAnnotation(XmlElement.class)};
+                    addElements(xmlElements, accObj, resolver, unmarshallerProvider);
                 } else if (accObj.isAnnotationPresent(XmlElements.class)) {
                     XmlElements xmlElements = accObj.getAnnotation(XmlElements.class);
-                    for (XmlElement xmlElement : xmlElements.value()) {
-                        addElement(xmlElement, accObj, resolver, unmarshallerProvider);
-                    }
+                    addElements(xmlElements.value(), accObj, resolver, unmarshallerProvider);
                 } else if (accObj.isAnnotationPresent(XmlElementRef.class)) {
                     addElementRef(accObj, resolver, unmarshallerProvider);
                 } else if (accObj.isAnnotationPresent(XmlValue.class)) {
@@ -106,55 +104,62 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
         attributeName2PropertyName.put(attributeName, propertyName);
     }
 
-    public <T extends AccessibleObject> void addElement(XmlElement xmlElement, T accObj, PropertyResolver<T> resolver, Unmarshaller.Provider unmarshallerProvider) throws Exception {
-        String propertyName = resolver.getPropertyName(accObj);
-        boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
-        String elementName;
-        if (wrapped) {
-            elementName = accObj.getAnnotation(XmlElementWrapper.class).name();
-        } else {
-            elementName = xmlElement.name();
-        }
-        if (elementName.equals(AUTO_GENERATED_NAME)) {
-            elementName = propertyName;
-        }
-        Class<?> type = resolver.getPropertyType(accObj);
-        if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
-            XmlJavaTypeAdapter xmlJavaTypeAdapter = accObj.getAnnotation(XmlJavaTypeAdapter.class);
-            Class<? extends XmlAdapter> adapterClass = xmlJavaTypeAdapter.value();
-            XmlAdapter adapter = adapterClass.newInstance();
-            localName2Adapter.put(elementName, adapter);
-            type = (Class) ((ParameterizedType) adapterClass.getGenericSuperclass()).getActualTypeArguments()[0];
-        } else {
-            if (type == List.class) {
-                type = resolver.getListComponentType(accObj);
-                if (!wrapped) {
+    public <T extends AccessibleObject> void addElements(
+            XmlElement[] xmlElements,
+            T accObj,
+            PropertyResolver<T> resolver,
+            Unmarshaller.Provider unmarshallerProvider) throws Exception {
+        final String propertyName = resolver.getPropertyName(accObj);
+        final boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
+
+        for (XmlElement xmlElement : xmlElements) {
+            String elementName;
+            if (wrapped) {
+                elementName = accObj.getAnnotation(XmlElementWrapper.class).name();
+            } else {
+                elementName = xmlElement.name();
+            }
+            if (elementName.equals(AUTO_GENERATED_NAME)) {
+                elementName = propertyName;
+            }
+            Class<?> type = resolver.getPropertyType(accObj);
+            if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
+                XmlJavaTypeAdapter xmlJavaTypeAdapter = accObj.getAnnotation(XmlJavaTypeAdapter.class);
+                Class<? extends XmlAdapter> adapterClass = xmlJavaTypeAdapter.value();
+                XmlAdapter adapter = adapterClass.newInstance();
+                localName2Adapter.put(elementName, adapter);
+                type = (Class) ((ParameterizedType) adapterClass.getGenericSuperclass()).getActualTypeArguments()[0];
+            } else {
+                if (type == List.class) {
+                    type = resolver.getListComponentType(accObj);
+                    if (!wrapped) {
+                        listTypeElementNames.add(elementName);
+                    }
+                } else if (type.isArray()) {
+                    type = type.getComponentType();
                     listTypeElementNames.add(elementName);
                 }
-            } else if (type.isArray()) {
-                type = type.getComponentType();
-                listTypeElementNames.add(elementName);
+                Class<?> elementType = xmlElement.type();
+                if (elementType != XmlElement.DEFAULT.class) {
+                    type = elementType;
+                }
             }
-            Class<?> elementType = xmlElement.type();
-            if (elementType != XmlElement.DEFAULT.class) {
-                type = elementType;
+            Unmarshaller childUnmarshaller = unmarshallerProvider.getUnmarshallerForType(type);
+            if (wrapped) {
+                String wrappedElementName = xmlElement.name();
+                if (wrappedElementName.equals(AUTO_GENERATED_NAME)) {
+                    wrappedElementName = propertyName;
+                }
+                WrapperUnmarshaller wrapperUnmarshaller = (WrapperUnmarshaller) localName2Unmarshaller.get(elementName);
+                if (wrapperUnmarshaller == null) {
+                    wrapperUnmarshaller = new WrapperUnmarshaller();
+                }
+                wrapperUnmarshaller.put(wrappedElementName, childUnmarshaller);
+                childUnmarshaller = wrapperUnmarshaller;
             }
+            elementName2PropertyName.put(elementName, propertyName);
+            localName2Unmarshaller.put(elementName, childUnmarshaller);
         }
-        Unmarshaller childUnmarshaller = unmarshallerProvider.getUnmarshallerForType(type);
-        if (wrapped) {
-            String wrappedElementName = xmlElement.name();
-            if (wrappedElementName.equals(AUTO_GENERATED_NAME)) {
-                wrappedElementName = propertyName;
-            }
-            WrapperUnmarshaller wrapperUnmarshaller = (WrapperUnmarshaller) localName2Unmarshaller.get(elementName);
-            if (wrapperUnmarshaller == null) {
-                wrapperUnmarshaller = new WrapperUnmarshaller();
-            }
-            wrapperUnmarshaller.put(wrappedElementName, childUnmarshaller);
-            childUnmarshaller = wrapperUnmarshaller;
-        }
-        elementName2PropertyName.put(elementName, propertyName);
-        localName2Unmarshaller.put(elementName, childUnmarshaller);
     }
 
     public <T extends AccessibleObject> void addElementRef(T accObj, PropertyResolver<T> resolver, Unmarshaller.Provider unmarshallerProvider) {
