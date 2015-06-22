@@ -129,8 +129,7 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
                 String elementName = resolveElementName(xmlElement.name(), propertyName);
                 Unmarshaller childUnmarshaller = resolveUnmarshaller(resolver, accObj, xmlElement, unmarshallerProvider);
 
-                Class<?> type = resolver.getPropertyType(accObj);
-                if (type == List.class || type.isArray()) {
+                if (resolver.isListType(accObj)) {
                     listTypeElementNames.add(elementName);
                 }
                 elementName2PropertyName.put(elementName, propertyName);
@@ -159,13 +158,7 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
             return new XmlAdapterUnmarshaller(adapter, unmarshaller);
         }
 
-        Class<?> type = resolver.getPropertyType(accObj);
-        if (type == List.class) {
-            type = resolver.getListComponentType(accObj);
-        } else if (type.isArray()) {
-            type = type.getComponentType();
-        }
-
+        Class<?> type = resolver.getComponentType(accObj);
         Class<?> elementType = xmlElement.type();
         if (elementType != XmlElement.DEFAULT.class) {
             type = elementType;
@@ -174,18 +167,18 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
         return unmarshallerProvider.getUnmarshallerForType(type);
     }
 
-    public <T extends AccessibleObject> void addElementRef(T accObj, PropertyResolver<T> resolver, Unmarshaller.Provider unmarshallerProvider) {
-        Class<?> propertyType = resolver.getPropertyType(accObj);
+    public <T extends AccessibleObject> void addElementRef(
+            final T accObj,
+            final PropertyResolver<T> resolver,
+            Unmarshaller.Provider unmarshallerProvider) {
+        Class<?> propertyType = resolver.getComponentType(accObj);
         final String propertyName = resolver.getPropertyName(accObj);
-        final boolean isListType = propertyType == List.class;
-        if (isListType) {
-            propertyType = resolver.getListComponentType(accObj);
-        }
+
         unmarshallerProvider.forGlobalUnmarshallerCompatibleWith(propertyType, new Provider.Handler() {
             public void handle(String globalName, Unmarshaller unmarshaller) {
                 elementName2PropertyName.put(globalName, propertyName);
                 localName2Unmarshaller.put(globalName, unmarshaller);
-                if (isListType) {
+                if (resolver.isListType(accObj)) {
                     listTypeElementNames.add(globalName);
                 }
             }

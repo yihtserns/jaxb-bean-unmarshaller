@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.List;
 
 /**
  *
@@ -45,12 +46,12 @@ abstract class PropertyResolver<T extends AccessibleObject> {
             return Introspector.decapitalize(propertyName);
         }
 
-        public Class<?> getPropertyType(Method method) {
+        protected Class<?> getPropertyType(Method method) {
             return isSetter(method) ? method.getParameterTypes()[0] : method.getReturnType();
         }
 
         @Override
-        public Type getGenericType(Method method) {
+        protected Type getGenericType(Method method) {
             return isSetter(method) ? method.getGenericParameterTypes()[0] : method.getGenericReturnType();
         }
 
@@ -68,12 +69,12 @@ abstract class PropertyResolver<T extends AccessibleObject> {
             return field.getName();
         }
 
-        public Class<?> getPropertyType(Field field) {
+        protected Class<?> getPropertyType(Field field) {
             return field.getType();
         }
 
         @Override
-        public Type getGenericType(Field field) {
+        protected Type getGenericType(Field field) {
             return field.getGenericType();
         }
     };
@@ -82,11 +83,29 @@ abstract class PropertyResolver<T extends AccessibleObject> {
 
     public abstract String getPropertyName(T t);
 
-    public abstract Class<?> getPropertyType(T t);
+    protected abstract Class<?> getPropertyType(T t);
 
-    public abstract Type getGenericType(T t);
+    protected abstract Type getGenericType(T t);
 
-    public Class<?> getListComponentType(T t) {
+    public boolean isListType(T accObj) {
+        Class<?> type = getPropertyType(accObj);
+
+        return type == List.class || type.isArray();
+    }
+
+    public Class<?> getComponentType(T accObj) {
+        Class<?> type = getPropertyType(accObj);
+
+        if (type == List.class) {
+            return getListComponentType(accObj);
+        }
+        if (type.isArray()) {
+            return type.getComponentType();
+        }
+        return type;
+    }
+
+    private Class<?> getListComponentType(T t) {
         Type type = getGenericType(t);
         type = ((ParameterizedType) type).getActualTypeArguments()[0];
 
