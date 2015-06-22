@@ -122,8 +122,8 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
                 wrapperUnmarshaller.put(elementName, childUnmarshaller);
             }
 
-            localName2Unmarshaller.put(wrapperElementName, wrapperUnmarshaller);
             elementName2PropertyName.put(wrapperElementName, propertyName);
+            localName2Unmarshaller.put(wrapperElementName, wrapperUnmarshaller);
         } else {
             for (XmlElement xmlElement : xmlElements) {
                 String elementName = resolveElementName(xmlElement.name(), propertyName);
