@@ -109,10 +109,10 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
             PropertyResolver<T> resolver,
             Unmarshaller.Provider unmarshallerProvider) throws Exception {
         final String propertyName = resolver.getPropertyName(accObj);
-        final boolean wrapped = accObj.isAnnotationPresent(XmlElementWrapper.class);
+        XmlElementWrapper elementWrapper = accObj.getAnnotation(XmlElementWrapper.class);
 
-        if (wrapped) {
-            String wrapperElementName = resolveElementName(accObj.getAnnotation(XmlElementWrapper.class).name(), propertyName);
+        if (elementWrapper != null) {
+            String wrapperElementName = resolveElementName(elementWrapper.name(), propertyName);
 
             WrapperUnmarshaller wrapperUnmarshaller = new WrapperUnmarshaller();
             for (XmlElement xmlElement : xmlElements) {
