@@ -158,10 +158,9 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
             return new XmlAdapterUnmarshaller(adapter, unmarshaller);
         }
 
-        Class<?> type = resolver.getComponentType(accObj);
-        Class<?> elementType = xmlElement.type();
-        if (elementType != XmlElement.DEFAULT.class) {
-            type = elementType;
+        Class<?> type = xmlElement.type();
+        if (type == XmlElement.DEFAULT.class) {
+            type = resolver.getComponentType(accObj);
         }
 
         return unmarshallerProvider.getUnmarshallerForType(type);
