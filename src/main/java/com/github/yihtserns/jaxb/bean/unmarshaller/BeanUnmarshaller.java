@@ -116,7 +116,7 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
 
             WrapperUnmarshaller wrapperUnmarshaller = new WrapperUnmarshaller();
             for (XmlElement xmlElement : xmlElements) {
-                Unmarshaller childUnmarshaller = resolveUnmarshaller(resolver, accObj, wrapperElementName, wrapped, xmlElement, unmarshallerProvider);
+                Unmarshaller childUnmarshaller = resolveUnmarshaller(resolver, accObj, xmlElement, unmarshallerProvider);
 
                 String elementName = resolveElementName(xmlElement.name(), propertyName);
                 wrapperUnmarshaller.put(elementName, childUnmarshaller);
@@ -127,8 +127,12 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
         } else {
             for (XmlElement xmlElement : xmlElements) {
                 String elementName = resolveElementName(xmlElement.name(), propertyName);
-                Unmarshaller childUnmarshaller = resolveUnmarshaller(resolver, accObj, elementName, wrapped, xmlElement, unmarshallerProvider);
+                Unmarshaller childUnmarshaller = resolveUnmarshaller(resolver, accObj, xmlElement, unmarshallerProvider);
 
+                Class<?> type = resolver.getPropertyType(accObj);
+                if (type == List.class || type.isArray()) {
+                    listTypeElementNames.add(elementName);
+                }
                 elementName2PropertyName.put(elementName, propertyName);
                 localName2Unmarshaller.put(elementName, childUnmarshaller);
             }
@@ -142,8 +146,6 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
     private <T extends AccessibleObject> Unmarshaller resolveUnmarshaller(
             PropertyResolver<T> resolver,
             T accObj,
-            String elementName,
-            final boolean wrapped,
             XmlElement xmlElement,
             Unmarshaller.Provider unmarshallerProvider) throws Exception {
 
@@ -160,12 +162,8 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
         Class<?> type = resolver.getPropertyType(accObj);
         if (type == List.class) {
             type = resolver.getListComponentType(accObj);
-            if (!wrapped) {
-                listTypeElementNames.add(elementName);
-            }
         } else if (type.isArray()) {
             type = type.getComponentType();
-            listTypeElementNames.add(elementName);
         }
 
         Class<?> elementType = xmlElement.type();
