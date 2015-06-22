@@ -95,9 +95,7 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
             attributeName = propertyName;
         }
         if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
-            XmlJavaTypeAdapter xmlJavaTypeAdapter = accObj.getAnnotation(XmlJavaTypeAdapter.class);
-            Class<? extends XmlAdapter> adapterClass = xmlJavaTypeAdapter.value();
-            XmlAdapter adapter = adapterClass.newInstance();
+            XmlAdapter adapter = accObj.getAnnotation(XmlJavaTypeAdapter.class).value().newInstance();
             attributeName2Adapter.put(attributeName, adapter);
         }
         attributeName2PropertyName.put(attributeName, propertyName);
