@@ -148,28 +148,30 @@ class BeanUnmarshaller implements Unmarshaller.InitializableUnmarshaller {
             String elementName,
             final boolean wrapped,
             XmlElement xmlElement) throws IllegalAccessException, InstantiationException {
-        Class<?> type = resolver.getPropertyType(accObj);
         if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
             XmlJavaTypeAdapter xmlJavaTypeAdapter = accObj.getAnnotation(XmlJavaTypeAdapter.class);
             Class<? extends XmlAdapter> adapterClass = xmlJavaTypeAdapter.value();
             XmlAdapter adapter = adapterClass.newInstance();
             localName2Adapter.put(elementName, adapter);
-            type = (Class) ((ParameterizedType) adapterClass.getGenericSuperclass()).getActualTypeArguments()[0];
-        } else {
-            if (type == List.class) {
-                type = resolver.getListComponentType(accObj);
-                if (!wrapped) {
-                    listTypeElementNames.add(elementName);
-                }
-            } else if (type.isArray()) {
-                type = type.getComponentType();
+            return (Class) ((ParameterizedType) adapterClass.getGenericSuperclass()).getActualTypeArguments()[0];
+        }
+
+        Class<?> type = resolver.getPropertyType(accObj);
+        if (type == List.class) {
+            type = resolver.getListComponentType(accObj);
+            if (!wrapped) {
                 listTypeElementNames.add(elementName);
             }
-            Class<?> elementType = xmlElement.type();
-            if (elementType != XmlElement.DEFAULT.class) {
-                type = elementType;
-            }
+        } else if (type.isArray()) {
+            type = type.getComponentType();
+            listTypeElementNames.add(elementName);
         }
+
+        Class<?> elementType = xmlElement.type();
+        if (elementType != XmlElement.DEFAULT.class) {
+            type = elementType;
+        }
+
         return type;
     }
 
