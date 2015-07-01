@@ -33,7 +33,7 @@ class WrapperUnmarshaller implements Unmarshaller {
 
     @Override
     public Object unmarshal(Element element) throws Exception {
-        List<Object> result = new ArrayList<Object>();
+        List<Object> result = newList();
         NodeList childNodes = element.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node item = childNodes.item(i);
@@ -49,6 +49,10 @@ class WrapperUnmarshaller implements Unmarshaller {
             }
         }
         return result;
+    }
+
+    protected List<Object> newList() {
+        return new ArrayList<Object>();
     }
 
     public void put(String localName, Unmarshaller unmarshaller) {

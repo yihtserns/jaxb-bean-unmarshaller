@@ -722,7 +722,7 @@ public class JaxbBeanUnmarshallerTest {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    private static class JaxbParent extends JaxbParent2 {
+    static class JaxbParent extends JaxbParent2 {
 
         @XmlAttribute(name = "duration")
         private Long length;
