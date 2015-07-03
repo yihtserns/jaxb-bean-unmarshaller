@@ -21,14 +21,11 @@ import org.w3c.dom.Attr;
  *
  * @author yihtserns
  */
-public interface AttrUnmarshaller extends Unmarshaller<Attr> {
+public enum AttributeValueUnmarshaller implements Unmarshaller<Attr> {
 
-    public static final AttrUnmarshaller GET_VALUE = new AttrUnmarshaller() {
+    INSTANCE;
 
-        public Object unmarshal(Attr attribute) {
-            return attribute.getValue();
-        }
-    };
-
-    Object unmarshal(Attr attribute) throws Exception;
+    public Object unmarshal(Attr attribute) {
+        return attribute.getValue();
+    }
 }

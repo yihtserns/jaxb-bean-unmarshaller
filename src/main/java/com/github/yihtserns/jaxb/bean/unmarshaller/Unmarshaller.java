@@ -15,6 +15,7 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
@@ -24,4 +25,21 @@ import org.w3c.dom.Node;
 interface Unmarshaller<N extends Node> {
 
     Object unmarshal(N node) throws Exception;
+
+    interface InitializableUnmarshaller extends Unmarshaller<Element> {
+
+        public void init(Provider unmarshallerFactory) throws Exception;
+    }
+
+    interface Provider {
+
+        Unmarshaller<Element> getUnmarshallerForType(Class<?> type) throws Exception;
+
+        void forGlobalUnmarshallerCompatibleWith(Class<?> type, Handler handler);
+
+        interface Handler {
+
+            void handle(String globalName, Unmarshaller<Element> unmarshaller);
+        }
+    }
 }
