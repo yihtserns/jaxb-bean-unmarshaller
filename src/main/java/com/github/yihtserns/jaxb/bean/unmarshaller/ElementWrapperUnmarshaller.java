@@ -27,7 +27,7 @@ import org.w3c.dom.NodeList;
  *
  * @author yihtserns
  */
-class WrapperUnmarshaller implements Unmarshaller<Element> {
+class ElementWrapperUnmarshaller implements Unmarshaller<Element> {
 
     private Map<String, Unmarshaller<Element>> localName2Unmarshaller = new HashMap<String, Unmarshaller<Element>>();
 

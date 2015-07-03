@@ -22,7 +22,7 @@ import org.springframework.beans.factory.support.ManagedList;
  *
  * @author yihtserns
  */
-public class SpringWrapperUnmarshaller extends WrapperUnmarshaller {
+public class SpringElementWrapperUnmarshaller extends ElementWrapperUnmarshaller {
 
     @Override
     protected List<Object> newList() {

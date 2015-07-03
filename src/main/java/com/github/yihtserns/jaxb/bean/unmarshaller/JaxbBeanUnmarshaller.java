@@ -97,7 +97,7 @@ public class JaxbBeanUnmarshaller {
                 return type2Unmarshaller.get(type);
             }
             if (type == String.class) {
-                return StringUnmarshaller.INSTANCE;
+                return ElementTextContentUnmarshaller.INSTANCE;
             }
 
             InitializableElementUnmarshaller unmarshaller = new BeanUnmarshaller(type.getDeclaredConstructor());

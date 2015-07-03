@@ -40,8 +40,8 @@ public class SpringBeanUnmarshaller extends BeanUnmarshaller {
     }
 
     @Override
-    protected WrapperUnmarshaller newWrapperUnmarshaller() {
-        return new SpringWrapperUnmarshaller();
+    protected ElementWrapperUnmarshaller newWrapperUnmarshaller() {
+        return new SpringElementWrapperUnmarshaller();
     }
 
     @Override

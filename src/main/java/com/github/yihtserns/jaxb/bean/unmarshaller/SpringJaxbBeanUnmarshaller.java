@@ -97,7 +97,7 @@ public class SpringJaxbBeanUnmarshaller {
                 return type2Unmarshaller.get(type);
             }
             if (type == String.class) {
-                return StringUnmarshaller.INSTANCE;
+                return ElementTextContentUnmarshaller.INSTANCE;
             }
 
             InitializableElementUnmarshaller unmarshaller = new SpringBeanUnmarshaller(type);
