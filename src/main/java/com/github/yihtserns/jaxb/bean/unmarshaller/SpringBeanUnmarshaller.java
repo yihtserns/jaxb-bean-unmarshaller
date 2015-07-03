@@ -42,7 +42,7 @@ public class SpringBeanUnmarshaller extends BeanUnmarshaller {
 
     @Override
     protected <N extends Node> Unmarshaller<N> newXmlAdapterUnmarshaller(XmlAdapter adapter, Unmarshaller<N> unmarshaller) {
-        return XmlAdapterConverter.XmlAdapterUnmarshaller.create(adapter, unmarshaller);
+        return SpringXmlAdapterUnmarshaller.create(adapter, unmarshaller);
     }
 
     @Override
@@ -91,7 +91,6 @@ public class SpringBeanUnmarshaller extends BeanUnmarshaller {
                 ((List) valueList).add(childInstance);
                 childInstance = valueList;
             }
-
 
             bean.addPropertyValue(propertyName, childInstance);
         }
