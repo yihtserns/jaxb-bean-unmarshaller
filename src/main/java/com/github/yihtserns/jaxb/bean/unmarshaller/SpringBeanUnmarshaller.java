@@ -16,6 +16,7 @@
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
 import java.util.List;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
 import org.springframework.beans.PropertyValue;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -40,6 +41,11 @@ public class SpringBeanUnmarshaller extends BeanUnmarshaller {
     }
 
     @Override
+    protected <N extends Node> Unmarshaller<N> newXmlAdapterUnmarshaller(XmlAdapter adapter, Unmarshaller<N> unmarshaller) {
+        return XmlAdapterFactoryBean.XmlAdapterUnmarshaller.create(adapter, unmarshaller);
+    }
+
+    @Override
     protected ElementWrapperUnmarshaller newWrapperUnmarshaller() {
         return new SpringElementWrapperUnmarshaller();
     }
@@ -54,9 +60,12 @@ public class SpringBeanUnmarshaller extends BeanUnmarshaller {
                 continue;
             }
             String attributeName = attr.getName();
+            Unmarshaller<Attr> unmarshaller = attributeName2Unmarshaller.get(attributeName);
 
             String propertyName = attributeName2PropertyName.get(attributeName);
-            bean.addPropertyValue(propertyName, attr.getValue());
+            Object propertyValue = unmarshaller.unmarshal(attr);
+
+            bean.addPropertyValue(propertyName, propertyValue);
         }
         NodeList childNodes = element.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {

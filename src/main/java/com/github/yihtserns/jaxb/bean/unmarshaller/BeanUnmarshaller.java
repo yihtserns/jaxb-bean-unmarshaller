@@ -104,11 +104,15 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
         Unmarshaller<Attr> unmarshaller = AttributeValueUnmarshaller.INSTANCE;
         if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
             XmlAdapter adapter = accObj.getAnnotation(XmlJavaTypeAdapter.class).value().newInstance();
-            unmarshaller = XmlAdapterUnmarshaller.create(adapter, unmarshaller);
+            unmarshaller = BeanUnmarshaller.this.newXmlAdapterUnmarshaller(adapter, unmarshaller);
         }
 
         attributeName2PropertyName.put(attributeName, propertyName);
         attributeName2Unmarshaller.put(attributeName, unmarshaller);
+    }
+
+    protected <N extends Node> Unmarshaller<N> newXmlAdapterUnmarshaller(XmlAdapter adapter, Unmarshaller<N> unmarshaller) {
+        return XmlAdapterUnmarshaller.create(adapter, unmarshaller);
     }
 
     public <T extends AccessibleObject> void addElements(
@@ -167,7 +171,7 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
             Unmarshaller<Element> unmarshaller = unmarshallerProvider.getUnmarshallerForType(valueType);
 
             XmlAdapter adapter = adapterClass.newInstance();
-            return XmlAdapterUnmarshaller.create(adapter, unmarshaller);
+            return newXmlAdapterUnmarshaller(adapter, unmarshaller);
         }
 
         Class<?> type = xmlElement.type();

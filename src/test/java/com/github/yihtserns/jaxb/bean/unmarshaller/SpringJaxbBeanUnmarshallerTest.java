@@ -25,6 +25,7 @@ import com.github.yihtserns.jaxb.bean.unmarshaller.JaxbBeanUnmarshallerTest.Mess
 import com.github.yihtserns.jaxb.bean.unmarshaller.JaxbBeanUnmarshallerTest.Note;
 import java.io.StringReader;
 import java.util.List;
+import java.util.Map;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
@@ -662,37 +663,40 @@ public class SpringJaxbBeanUnmarshallerTest {
         assertThat(result.getAnnotation().getText(), is("WIP"));
     }
 
-//    @Test
-//    public void canUnmarshalElementWithXmlJavaTypeAdapter() throws Exception {
-//        SpringJaxbBeanUnmarshaller unmarshaller = SpringJaxbBeanUnmarshaller.newInstance(JaxbObject2.class);
-//
-//        String xml = "<secondJaxbObject xmlns=\"http://example.com/jaxb\">\n"
-//                + "  <metadata>\n"
-//                + "    <entry key=\"author\" value=\"Me\"/>\n"
-//                + "    <entry key=\"obsolete\" value=\"Yes\"/>\n"
-//                + "  </metadata>\n"
-//                + "</secondJaxbObject>";
-//
-//        BeanDefinition bd = (BeanDefinition) unmarshaller.unmarshal(toElement(xml));
-//        JaxbObject2 result = asBean(bd);
-//
-//        Map<String, String> metadata = result.getMetadata();
-//        assertThat(metadata, hasEntry("author", "Me"));
-//        assertThat(metadata, hasEntry("obsolete", "Yes"));
-//    }
-//    @Test
-//    public void canUnmarshalAttributeWithXmlJavaTypeAdapter() throws Exception {
-//        SpringJaxbBeanUnmarshaller unmarshaller = SpringJaxbBeanUnmarshaller.newInstance(JaxbObject2.class);
-//
-//        String xml = "<secondJaxbObject"
-//                + "      xmlns=\"http://example.com/jaxb\""
-//                + "      annotationAttr=\"WIP\">\n"
-//                + "</secondJaxbObject>";
-//
-//        JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
-//        assertThat(result.getAnnotationAttr().getText(), is("WIP"));
-//    }
-//
+    @Test
+    public void canUnmarshalElementWithXmlJavaTypeAdapter() throws Exception {
+        SpringJaxbBeanUnmarshaller unmarshaller = SpringJaxbBeanUnmarshaller.newInstance(JaxbObject2.class);
+
+        String xml = "<secondJaxbObject xmlns=\"http://example.com/jaxb\">\n"
+                + "  <metadata>\n"
+                + "    <entry key=\"author\" value=\"Me\"/>\n"
+                + "    <entry key=\"obsolete\" value=\"Yes\"/>\n"
+                + "  </metadata>\n"
+                + "</secondJaxbObject>";
+
+        BeanDefinition bd = (BeanDefinition) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject2 result = asBean(bd);
+
+        Map<String, String> metadata = result.getMetadata();
+        assertThat(metadata, hasEntry("author", "Me"));
+        assertThat(metadata, hasEntry("obsolete", "Yes"));
+    }
+
+    @Test
+    public void canUnmarshalAttributeWithXmlJavaTypeAdapter() throws Exception {
+        SpringJaxbBeanUnmarshaller unmarshaller = SpringJaxbBeanUnmarshaller.newInstance(JaxbObject2.class);
+
+        String xml = "<secondJaxbObject"
+                + "      xmlns=\"http://example.com/jaxb\""
+                + "      annotationAttr=\"WIP\">\n"
+                + "</secondJaxbObject>";
+
+        BeanDefinition bd = (BeanDefinition) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject2 result = asBean(bd);
+
+        assertThat(result.getAnnotationAttr().getText(), is("WIP"));
+    }
+
     private static Element toElement(String xml) throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
