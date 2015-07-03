@@ -18,8 +18,6 @@ package com.github.yihtserns.jaxb.bean.unmarshaller;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
-import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.w3c.dom.Node;
 
@@ -27,35 +25,10 @@ import org.w3c.dom.Node;
  *
  * @author yihtserns
  */
-public class XmlAdapterFactoryBean implements InitializingBean, FactoryBean {
+public class XmlAdapterConverter {
 
-    private Object value = null;
-    private Class objectType;
-    private XmlAdapter xmlAdapter;
-
-    public XmlAdapterFactoryBean(Class objectType, XmlAdapter xmlAdapter) {
-        this.objectType = objectType;
-        this.xmlAdapter = xmlAdapter;
-    }
-
-    public void afterPropertiesSet() throws Exception {
-        value = xmlAdapter.unmarshal(value);
-    }
-
-    public Object getObject() throws Exception {
-        return value;
-    }
-
-    public Class getObjectType() {
-        return objectType;
-    }
-
-    public boolean isSingleton() {
-        return true;
-    }
-
-    public void setValue(Object value) {
-        this.value = value;
+    public static Object convert(XmlAdapter xmlAdapter, Object value) throws Exception {
+        return xmlAdapter.unmarshal(value);
     }
 
     static class XmlAdapterUnmarshaller implements Unmarshaller {
@@ -73,10 +46,10 @@ public class XmlAdapterFactoryBean implements InitializingBean, FactoryBean {
         public Object unmarshal(Node node) throws Exception {
             Object instance = delegate.unmarshal(node);
 
-            return BeanDefinitionBuilder.genericBeanDefinition(XmlAdapterFactoryBean.class)
-                    .addConstructorArgValue(objectType)
+            return BeanDefinitionBuilder.genericBeanDefinition(XmlAdapterConverter.class)
+                    .setFactoryMethod("convert")
                     .addConstructorArgValue(xmlAdapter)
-                    .addPropertyValue("value", instance)
+                    .addConstructorArgValue(instance)
                     .getBeanDefinition();
         }
 
