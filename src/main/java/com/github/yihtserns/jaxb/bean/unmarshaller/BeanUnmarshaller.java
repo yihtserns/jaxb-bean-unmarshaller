@@ -52,7 +52,6 @@ class BeanUnmarshaller implements ElementUnmarshaller.InitializableUnmarshaller 
     Set<String> listTypeElementNames = new HashSet<String>();
     Map<String, String> elementName2PropertyName = new HashMap<String, String>();
     Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
-    Map<String, XmlAdapter> attributeName2Adapter = new HashMap<String, XmlAdapter>();
     Map<String, AttrUnmarshaller> attributeName2Unmarshaller = new HashMap<String, AttrUnmarshaller>();
     Map<String, ElementUnmarshaller> localName2Unmarshaller = new HashMap<String, ElementUnmarshaller>();
     String textContentPropertyName = null;
@@ -99,12 +98,14 @@ class BeanUnmarshaller implements ElementUnmarshaller.InitializableUnmarshaller 
         String propertyName = resolver.getPropertyName(accObj);
         String attributeName = returnNameOrDefault(xmlAttribute.name(), propertyName);
 
+        AttrUnmarshaller unmarshaller = AttrUnmarshaller.GET_VALUE;
         if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
             XmlAdapter adapter = accObj.getAnnotation(XmlJavaTypeAdapter.class).value().newInstance();
-            attributeName2Adapter.put(attributeName, adapter);
+            unmarshaller = new XmlAdapterAttrUnmarshaller(adapter, unmarshaller);
         }
+
         attributeName2PropertyName.put(attributeName, propertyName);
-        attributeName2Unmarshaller.put(attributeName, AttrUnmarshaller.GET_VALUE);
+        attributeName2Unmarshaller.put(attributeName, unmarshaller);
     }
 
     public <T extends AccessibleObject> void addElements(
@@ -223,10 +224,6 @@ class BeanUnmarshaller implements ElementUnmarshaller.InitializableUnmarshaller 
             String propertyName = attributeName2PropertyName.get(attributeName);
             Object propertyValue = unmarshaller.unmarshal(attr);
 
-            XmlAdapter adapter = attributeName2Adapter.get(attributeName);
-            if (adapter != null) {
-                propertyValue = adapter.unmarshal(propertyValue);
-            }
             bean.setPropertyValue(propertyName, propertyValue);
         }
         NodeList childNodes = element.getChildNodes();
