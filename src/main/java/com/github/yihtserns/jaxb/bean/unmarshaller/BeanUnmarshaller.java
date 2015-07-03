@@ -53,6 +53,7 @@ class BeanUnmarshaller implements ElementUnmarshaller.InitializableUnmarshaller 
     Map<String, String> elementName2PropertyName = new HashMap<String, String>();
     Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
     Map<String, XmlAdapter> attributeName2Adapter = new HashMap<String, XmlAdapter>();
+    Map<String, AttrUnmarshaller> attributeName2Unmarshaller = new HashMap<String, AttrUnmarshaller>();
     Map<String, ElementUnmarshaller> localName2Unmarshaller = new HashMap<String, ElementUnmarshaller>();
     String textContentPropertyName = null;
     final Class<?> beanClass;
@@ -103,6 +104,7 @@ class BeanUnmarshaller implements ElementUnmarshaller.InitializableUnmarshaller 
             attributeName2Adapter.put(attributeName, adapter);
         }
         attributeName2PropertyName.put(attributeName, propertyName);
+        attributeName2Unmarshaller.put(attributeName, AttrUnmarshaller.GET_VALUE);
     }
 
     public <T extends AccessibleObject> void addElements(
@@ -216,13 +218,16 @@ class BeanUnmarshaller implements ElementUnmarshaller.InitializableUnmarshaller 
                 continue;
             }
             String attributeName = attr.getName();
+            AttrUnmarshaller unmarshaller = attributeName2Unmarshaller.get(attributeName);
+
             String propertyName = attributeName2PropertyName.get(attributeName);
-            Object value = attr.getValue();
+            Object propertyValue = unmarshaller.unmarshal(attr);
+
             XmlAdapter adapter = attributeName2Adapter.get(attributeName);
             if (adapter != null) {
-                value = adapter.unmarshal(value);
+                propertyValue = adapter.unmarshal(propertyValue);
             }
-            bean.setPropertyValue(propertyName, value);
+            bean.setPropertyValue(propertyName, propertyValue);
         }
         NodeList childNodes = element.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
