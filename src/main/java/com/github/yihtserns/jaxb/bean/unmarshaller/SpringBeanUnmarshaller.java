@@ -67,7 +67,7 @@ public class SpringBeanUnmarshaller extends BeanUnmarshaller {
             Element childElement = (Element) item;
             String localName = item.getLocalName();
 
-            Unmarshaller childUnmarshaller = localName2Unmarshaller.get(localName);
+            ElementUnmarshaller childUnmarshaller = localName2Unmarshaller.get(localName);
             Object childInstance = childUnmarshaller.unmarshal(childElement);
             String propertyName = elementName2PropertyName.get(localName);
 

@@ -15,8 +15,8 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
-import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.InitializableUnmarshaller;
-import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.Provider.Handler;
+import com.github.yihtserns.jaxb.bean.unmarshaller.ElementUnmarshaller.InitializableUnmarshaller;
+import com.github.yihtserns.jaxb.bean.unmarshaller.ElementUnmarshaller.Provider.Handler;
 import java.beans.Introspector;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,18 +32,18 @@ import org.w3c.dom.Element;
  */
 public class JaxbBeanUnmarshaller {
 
-    private Map<String, Unmarshaller> globalName2Unmarshaller;
+    private Map<String, ElementUnmarshaller> globalName2Unmarshaller;
 
     /**
      * @see #newInstance(java.lang.Class...)
      */
-    private JaxbBeanUnmarshaller(Map<String, Unmarshaller> globalName2Unmarshaller) {
+    private JaxbBeanUnmarshaller(Map<String, ElementUnmarshaller> globalName2Unmarshaller) {
         this.globalName2Unmarshaller = globalName2Unmarshaller;
     }
 
     public Object unmarshal(Element element) throws Exception {
         String globalName = element.getLocalName();
-        Unmarshaller unmarshaller = globalName2Unmarshaller.get(globalName);
+        ElementUnmarshaller unmarshaller = globalName2Unmarshaller.get(globalName);
 
         return unmarshaller.unmarshal(element);
     }
@@ -58,9 +58,9 @@ public class JaxbBeanUnmarshaller {
         return new JaxbBeanUnmarshaller(builder.globalName2Unmarshaller);
     }
 
-    private static final class Builder implements Unmarshaller.Provider {
+    private static final class Builder implements ElementUnmarshaller.Provider {
 
-        private Map<String, Unmarshaller> globalName2Unmarshaller = new HashMap<String, Unmarshaller>();
+        private Map<String, ElementUnmarshaller> globalName2Unmarshaller = new HashMap<String, ElementUnmarshaller>();
         private Map<Class<?>, String> globalType2Name = new HashMap<Class<?>, String>();
         private Map<Class<?>, InitializableUnmarshaller> type2Unmarshaller
                 = new HashMap<Class<?>, InitializableUnmarshaller>();
@@ -81,14 +81,14 @@ public class JaxbBeanUnmarshaller {
 
         public void addGlobalType(Class<?> type) throws Exception {
             String elementName = resolveRootElementName(type);
-            Unmarshaller unmarshaller = getUnmarshallerForType(type);
+            ElementUnmarshaller unmarshaller = getUnmarshallerForType(type);
 
             globalName2Unmarshaller.put(elementName, unmarshaller);
             globalType2Name.put(type, elementName);
         }
 
         @Override
-        public Unmarshaller getUnmarshallerForType(Class<?> type) throws Exception {
+        public ElementUnmarshaller getUnmarshallerForType(Class<?> type) throws Exception {
             if (type2InitializedUnmarshaller.containsKey(type)) {
                 return type2InitializedUnmarshaller.get(type);
             }
@@ -114,7 +114,7 @@ public class JaxbBeanUnmarshaller {
                 if (!type.isAssignableFrom(globalType)) {
                     continue;
                 }
-                Unmarshaller unmarshaller = globalName2Unmarshaller.get(globalName);
+                ElementUnmarshaller unmarshaller = globalName2Unmarshaller.get(globalName);
                 handler.handle(globalName, unmarshaller);
             }
         }

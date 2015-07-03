@@ -21,7 +21,7 @@ import org.w3c.dom.Element;
  *
  * @author yihtserns
  */
-enum StringUnmarshaller implements Unmarshaller {
+enum StringUnmarshaller implements ElementUnmarshaller {
 
     INSTANCE;
 

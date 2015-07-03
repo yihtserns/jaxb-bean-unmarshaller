@@ -22,12 +22,12 @@ import org.w3c.dom.Element;
  *
  * @author yihtserns
  */
-class XmlAdapterUnmarshaller implements Unmarshaller {
+class XmlAdapterUnmarshaller implements ElementUnmarshaller {
 
     private XmlAdapter xmlAdapter;
-    private Unmarshaller delegate;
+    private ElementUnmarshaller delegate;
 
-    public XmlAdapterUnmarshaller(XmlAdapter xmlAdapter, Unmarshaller delegate) {
+    public XmlAdapterUnmarshaller(XmlAdapter xmlAdapter, ElementUnmarshaller delegate) {
         this.xmlAdapter = xmlAdapter;
         this.delegate = delegate;
     }

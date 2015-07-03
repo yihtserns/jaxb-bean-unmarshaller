@@ -21,24 +21,24 @@ import org.w3c.dom.Element;
  *
  * @author yihtserns
  */
-interface Unmarshaller {
+interface ElementUnmarshaller {
 
     public Object unmarshal(Element element) throws Exception;
 
-    interface InitializableUnmarshaller extends Unmarshaller {
+    interface InitializableUnmarshaller extends ElementUnmarshaller {
 
         public void init(Provider unmarshallerFactory) throws Exception;
     }
 
     interface Provider {
 
-        Unmarshaller getUnmarshallerForType(Class<?> type) throws Exception;
+        ElementUnmarshaller getUnmarshallerForType(Class<?> type) throws Exception;
 
         void forGlobalUnmarshallerCompatibleWith(Class<?> type, Handler handler);
 
         interface Handler {
 
-            void handle(String globalName, Unmarshaller unmarshaller);
+            void handle(String globalName, ElementUnmarshaller unmarshaller);
         }
     }
 }
