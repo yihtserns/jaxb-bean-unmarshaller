@@ -29,7 +29,7 @@ import org.w3c.dom.NodeList;
  */
 class WrapperUnmarshaller implements ElementUnmarshaller {
 
-    private Map<String, ElementUnmarshaller> localName2Unmarshaller = new HashMap<String, ElementUnmarshaller>();
+    private Map<String, Unmarshaller<Element>> localName2Unmarshaller = new HashMap<String, Unmarshaller<Element>>();
 
     @Override
     public Object unmarshal(Element element) throws Exception {
@@ -42,7 +42,7 @@ class WrapperUnmarshaller implements ElementUnmarshaller {
             }
             Element childElement = (Element) item;
             String localName = childElement.getLocalName();
-            ElementUnmarshaller unmarshaller = localName2Unmarshaller.get(localName);
+            Unmarshaller<Element> unmarshaller = localName2Unmarshaller.get(localName);
             if (unmarshaller != null) {
                 Object instance = unmarshaller.unmarshal(childElement);
                 result.add(instance);
@@ -55,7 +55,7 @@ class WrapperUnmarshaller implements ElementUnmarshaller {
         return new ArrayList<Object>();
     }
 
-    public void put(String localName, ElementUnmarshaller unmarshaller) {
+    public void put(String localName, Unmarshaller<Element> unmarshaller) {
         this.localName2Unmarshaller.put(localName, unmarshaller);
     }
 }

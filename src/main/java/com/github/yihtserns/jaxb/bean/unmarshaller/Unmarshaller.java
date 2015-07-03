@@ -15,28 +15,13 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
 import org.w3c.dom.Node;
 
 /**
  *
  * @author yihtserns
  */
-class XmlAdapterUnmarshaller<N extends Node> implements Unmarshaller<N> {
+interface Unmarshaller<N extends Node> {
 
-    private XmlAdapter xmlAdapter;
-    private Unmarshaller<N> delegate;
-
-    private XmlAdapterUnmarshaller(XmlAdapter xmlAdapter, Unmarshaller<N> delegate) {
-        this.xmlAdapter = xmlAdapter;
-        this.delegate = delegate;
-    }
-
-    public Object unmarshal(N node) throws Exception {
-        return xmlAdapter.unmarshal(delegate.unmarshal(node));
-    }
-
-    public static <N extends Node> XmlAdapterUnmarshaller<N> create(XmlAdapter xmlAdapter, Unmarshaller<N> delegate) {
-        return new XmlAdapterUnmarshaller(xmlAdapter, delegate);
-    }
+    Object unmarshal(N node) throws Exception;
 }

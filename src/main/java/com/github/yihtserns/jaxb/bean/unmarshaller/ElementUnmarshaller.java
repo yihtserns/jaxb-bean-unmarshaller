@@ -21,7 +21,7 @@ import org.w3c.dom.Element;
  *
  * @author yihtserns
  */
-interface ElementUnmarshaller {
+interface ElementUnmarshaller extends Unmarshaller<Element> {
 
     public Object unmarshal(Element element) throws Exception;
 

@@ -21,7 +21,7 @@ import org.w3c.dom.Attr;
  *
  * @author yihtserns
  */
-public interface AttrUnmarshaller {
+public interface AttrUnmarshaller extends Unmarshaller<Attr> {
 
     public static final AttrUnmarshaller GET_VALUE = new AttrUnmarshaller() {
 
