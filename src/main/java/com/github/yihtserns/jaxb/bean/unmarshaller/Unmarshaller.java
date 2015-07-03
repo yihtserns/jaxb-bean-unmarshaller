@@ -26,12 +26,12 @@ interface Unmarshaller<N extends Node> {
 
     Object unmarshal(N node) throws Exception;
 
-    interface InitializableUnmarshaller extends Unmarshaller<Element> {
+    interface InitializableElementUnmarshaller extends Unmarshaller<Element> {
 
-        public void init(Provider unmarshallerFactory) throws Exception;
+        public void init(ElementUnmarshallerProvider unmarshallerFactory) throws Exception;
     }
 
-    interface Provider {
+    interface ElementUnmarshallerProvider {
 
         Unmarshaller<Element> getUnmarshallerForType(Class<?> type) throws Exception;
 

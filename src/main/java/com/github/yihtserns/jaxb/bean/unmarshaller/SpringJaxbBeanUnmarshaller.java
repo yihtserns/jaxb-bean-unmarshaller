@@ -15,9 +15,9 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
-import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.InitializableUnmarshaller;
-import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.Provider;
-import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.Provider.Handler;
+import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.InitializableElementUnmarshaller;
+import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider;
+import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider.Handler;
 import java.beans.Introspector;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,22 +59,22 @@ public class SpringJaxbBeanUnmarshaller {
         return new SpringJaxbBeanUnmarshaller(builder.globalName2Unmarshaller);
     }
 
-    private static final class Builder implements Provider {
+    private static final class Builder implements ElementUnmarshallerProvider {
 
         private Map<String, Unmarshaller<Element>> globalName2Unmarshaller = new HashMap<String, Unmarshaller<Element>>();
         private Map<Class<?>, String> globalType2Name = new HashMap<Class<?>, String>();
-        private Map<Class<?>, InitializableUnmarshaller> type2Unmarshaller
-                = new HashMap<Class<?>, InitializableUnmarshaller>();
-        private Map<Class<?>, InitializableUnmarshaller> type2InitializedUnmarshaller
-                = new HashMap<Class<?>, InitializableUnmarshaller>();
+        private Map<Class<?>, InitializableElementUnmarshaller> type2Unmarshaller
+                = new HashMap<Class<?>, InitializableElementUnmarshaller>();
+        private Map<Class<?>, InitializableElementUnmarshaller> type2InitializedUnmarshaller
+                = new HashMap<Class<?>, InitializableElementUnmarshaller>();
 
         public void init() throws Exception {
             while (!type2Unmarshaller.isEmpty()) {
-                Collection<InitializableUnmarshaller> toBeInitialized = new ArrayList(type2Unmarshaller.values());
+                Collection<InitializableElementUnmarshaller> toBeInitialized = new ArrayList(type2Unmarshaller.values());
                 type2InitializedUnmarshaller.putAll(type2Unmarshaller);
                 type2Unmarshaller.clear();
 
-                for (InitializableUnmarshaller unmarshaller : toBeInitialized) {
+                for (InitializableElementUnmarshaller unmarshaller : toBeInitialized) {
                     unmarshaller.init(this);
                 }
             }
@@ -100,7 +100,7 @@ public class SpringJaxbBeanUnmarshaller {
                 return StringUnmarshaller.INSTANCE;
             }
 
-            InitializableUnmarshaller unmarshaller = new SpringBeanUnmarshaller(type);
+            InitializableElementUnmarshaller unmarshaller = new SpringBeanUnmarshaller(type);
             type2Unmarshaller.put(type, unmarshaller);
 
             return unmarshaller;

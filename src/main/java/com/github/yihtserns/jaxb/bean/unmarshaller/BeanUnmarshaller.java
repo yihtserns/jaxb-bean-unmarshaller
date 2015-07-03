@@ -15,8 +15,9 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
-import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.InitializableUnmarshaller;
-import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.Provider;
+import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.InitializableElementUnmarshaller;
+import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider;
+import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider.Handler;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
@@ -48,7 +49,7 @@ import org.w3c.dom.NodeList;
  *
  * @author yihtserns
  */
-class BeanUnmarshaller implements InitializableUnmarshaller {
+class BeanUnmarshaller implements InitializableElementUnmarshaller {
 
     public static final String AUTO_GENERATED_NAME = "##default";
     Set<String> listTypeElementNames = new HashSet<String>();
@@ -70,7 +71,7 @@ class BeanUnmarshaller implements InitializableUnmarshaller {
     }
 
     @Override
-    public void init(Provider unmarshallerProvider) throws Exception {
+    public void init(ElementUnmarshallerProvider unmarshallerProvider) throws Exception {
         Class<?> currentClass = beanClass;
         while (currentClass != Object.class) {
             XmlAccessorType xmlAccessorType = currentClass.getAnnotation(XmlAccessorType.class);
@@ -114,7 +115,7 @@ class BeanUnmarshaller implements InitializableUnmarshaller {
             XmlElement[] xmlElements,
             T accObj,
             PropertyResolver<T> resolver,
-            Provider unmarshallerProvider) throws Exception {
+            ElementUnmarshallerProvider unmarshallerProvider) throws Exception {
         final String propertyName = resolver.getPropertyName(accObj);
         XmlElementWrapper elementWrapper = accObj.getAnnotation(XmlElementWrapper.class);
 
@@ -157,7 +158,7 @@ class BeanUnmarshaller implements InitializableUnmarshaller {
             PropertyResolver<T> resolver,
             T accObj,
             XmlElement xmlElement,
-            Unmarshaller.Provider unmarshallerProvider) throws Exception {
+            ElementUnmarshallerProvider unmarshallerProvider) throws Exception {
 
         if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
             Class<? extends XmlAdapter> adapterClass = accObj.getAnnotation(XmlJavaTypeAdapter.class).value();
@@ -180,11 +181,11 @@ class BeanUnmarshaller implements InitializableUnmarshaller {
     public <T extends AccessibleObject> void addElementRef(
             final T accObj,
             final PropertyResolver<T> resolver,
-            Provider unmarshallerProvider) {
+            ElementUnmarshallerProvider unmarshallerProvider) {
         Class<?> propertyType = resolver.getComponentType(accObj);
         final String propertyName = resolver.getPropertyName(accObj);
 
-        unmarshallerProvider.forGlobalUnmarshallerCompatibleWith(propertyType, new Provider.Handler() {
+        unmarshallerProvider.forGlobalUnmarshallerCompatibleWith(propertyType, new Handler() {
             public void handle(String globalName, Unmarshaller<Element> unmarshaller) {
                 elementName2PropertyName.put(globalName, propertyName);
                 localName2Unmarshaller.put(globalName, unmarshaller);
