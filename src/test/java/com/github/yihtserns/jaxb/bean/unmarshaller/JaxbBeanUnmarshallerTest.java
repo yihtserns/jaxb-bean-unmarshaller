@@ -17,6 +17,7 @@ package com.github.yihtserns.jaxb.bean.unmarshaller;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,140 +48,116 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalSingleObject() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\"/>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result, is(notNullValue()));
     }
 
     @Test
     public void canUnmarshalFieldAttribute() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " count=\"3\""
                 + "/>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getCount(), is(3));
     }
 
     @Test
     public void canUnmarshalFieldAttributeWithCustomName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " displayName=\"JAXB\""
                 + "/>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getId(), is("JAXB"));
     }
 
     @Test
     public void canUnmarshalParentAttribute() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " duration=\"100\""
                 + "/>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getLength(), is(100L));
     }
 
     @Test
     public void canUnmarshalSetterAttribute() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " valid=\"true\""
                 + "/>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.isValid(), is(true));
     }
 
     @Test
     public void canUnmarshalGetterAttribute() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " description=\"JAXB Object\""
                 + "/>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getDescription(), is("JAXB Object"));
     }
 
     @Test
     public void canUnmarshalSetterAttributeWithCustomName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " skip=\"true\""
                 + "/>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.isIgnore(), is(true));
     }
 
     @Test
     public void canUnmarshalGetterAttributeWithCustomName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\""
                 + " executable=\"false\""
                 + "/>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.isRunnable(), is(false));
     }
 
     @Test
     public void canUnmarshalChildElement() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <child/>\n"
                 + "</jaxbObject>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getChild(), is(notNullValue()));
     }
 
     @Test
     public void canUnmarshalChildElementWithFieldAttribute() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <child name=\"A Child\"/>\n"
                 + "</jaxbObject>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         JaxbChild child = result.getChild();
         assertThat(child.getName(), is("A Child"));
     }
 
     @Test
     public void canUnmarshalChildElementWithFieldAttributeWithCustomName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <child counter=\"100\"/>\n"
                 + "</jaxbObject>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         JaxbChild child = result.getChild();
         assertThat(child.getCount(), is(100L));
     }
 
     @Test
     public void canUnmarshalChildElementWithParentAttributes() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <child"
                 + "    duration=\"200\""
@@ -190,8 +167,8 @@ public class JaxbBeanUnmarshallerTest {
                 + "    executable=\"true\""
                 + "  />\n"
                 + "</jaxbObject>";
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
 
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         JaxbChild child = result.getChild();
         assertThat(child.getLength(), is(200L));
         assertThat(child.isValid(), is(true));
@@ -202,101 +179,84 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalChildRootElement() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class, JaxbObject2.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <secondJaxbObject valid=\"true\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
-
+        JaxbObject result = unmarshal(xml, JaxbObject.class, JaxbObject2.class);
         JaxbObject2 globalChild = result.getGlobalChild();
         assertThat(globalChild.isValid(), is(true));
     }
 
     @Test
     public void canUnmarshalNamedChildElement() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <childWithName valid=\"true\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getNamedChild().isValid(), is(true));
     }
 
     @Test
     public void canUnmarshalParentChildElement() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <parentChild valid=\"true\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getParentChild().isValid(), is(true));
     }
 
     @Test
     public void canUnmarshalParentChildElementWithCustomName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <parentChildWithName valid=\"true\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getNamedParentChild().isValid(), is(true));
     }
 
     @Test
     public void canUnmarshalSetterElement() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <setterChild valid=\"true\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getSetterChild().isValid(), is(true));
     }
 
     @Test
     public void canUnmarshalGetterElement() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <getterChild valid=\"true\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getGetterChild().isValid(), is(true));
     }
 
     @Test
     public void canUnmarshalGetterElementWithCustomName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <setterChildWithName valid=\"true\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getNamedSetterChild().isValid(), is(true));
     }
 
     @Test
     public void canUnmarshalArrayChildElement() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <childrenArray valid=\"true\"/>\n"
                 + "  <childrenArray valid=\"false\"/>\n"
                 + "  <childrenArray valid=\"true\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getChildrenArray(), arrayWithSize(3));
         assertThat(result.getChildrenArray()[0].isValid(), is(true));
         assertThat(result.getChildrenArray()[1].isValid(), is(false));
@@ -305,15 +265,13 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalListChildElement() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <children valid=\"true\"/>\n"
                 + "  <children valid=\"false\"/>\n"
                 + "  <children valid=\"true\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getChildren(), hasSize(3));
         assertThat(result.getChildren().get(0).isValid(), is(true));
         assertThat(result.getChildren().get(1).isValid(), is(false));
@@ -322,22 +280,18 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalStringList() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <alias>This</alias>\n"
                 + "  <alias>That</alias>\n"
                 + "  <alias>It</alias>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getAliases(), contains("This", "That", "It"));
     }
 
     @Test
     public void canUnmarshalElementWrapper() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <options1>\n"
                 + "    <options1>skip-invalid</options1>\n"
@@ -345,7 +299,7 @@ public class JaxbBeanUnmarshallerTest {
                 + "  </options1>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getOptions1(), contains(
                 "skip-invalid",
                 "purge-skipped"));
@@ -353,8 +307,6 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalElementWrapperWithCustomElementName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <options2>\n"
                 + "    <option2>skip-invalid</option2>\n"
@@ -362,7 +314,7 @@ public class JaxbBeanUnmarshallerTest {
                 + "  </options2>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getOptions2(), contains(
                 "skip-invalid",
                 "purge-skipped"));
@@ -370,8 +322,6 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalElementWrapperWithCustomWrapperName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <wrappedOptions3>\n"
                 + "    <options3>skip-invalid</options3>\n"
@@ -379,7 +329,7 @@ public class JaxbBeanUnmarshallerTest {
                 + "  </wrappedOptions3>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getOptions3(), contains(
                 "skip-invalid",
                 "purge-skipped"));
@@ -387,8 +337,6 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalElementWrapperWithCustomWrapperAndElementName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <wrappedOptions4>\n"
                 + "    <option4>skip-invalid</option4>\n"
@@ -396,7 +344,7 @@ public class JaxbBeanUnmarshallerTest {
                 + "  </wrappedOptions4>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getOptions4(), contains(
                 "skip-invalid",
                 "purge-skipped"));
@@ -404,8 +352,6 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalNonStringElementWrapperWithCustomWrapperAndElementName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <wrappedOptions5>\n"
                 + "    <option5 valid=\"true\"/>\n"
@@ -413,7 +359,7 @@ public class JaxbBeanUnmarshallerTest {
                 + "  </wrappedOptions5>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getOptions5(), hasSize(2));
         assertThat(result.getOptions5().get(0).isValid(), is(true));
         assertThat(result.getOptions5().get(1).isValid(), is(false));
@@ -421,27 +367,23 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalTypedElement() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "    <typedChild name=\"A Child\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getTypedChild(), (Matcher) isA(JaxbChild.class));
         assertThat(((JaxbChild) result.getTypedChild()).getName(), is("A Child"));
     }
 
     @Test
     public void canUnmarshalXmlElements() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         {
             String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                     + "  <child1 valid=\"true\"/>\n"
                     + "</jaxbObject>";
 
-            JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+            JaxbObject result = unmarshal(xml, JaxbObject.class);
             assertThat(result.getTwoTypes(), (Matcher) isA(JaxbChild.class));
             assertThat(result.getTwoTypes().isValid(), is(true));
         }
@@ -451,7 +393,7 @@ public class JaxbBeanUnmarshallerTest {
                     + "  <child2 valid=\"false\"/>\n"
                     + "</jaxbObject>";
 
-            JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+            JaxbObject result = unmarshal(xml, JaxbObject.class);
             assertThat(result.getTwoTypes(), (Matcher) isA(JaxbChild2.class));
             assertThat(result.getTwoTypes().isValid(), is(false));
         }
@@ -459,8 +401,6 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalXmlElementsList() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <childList1 valid=\"true\"/>\n"
                 + "  <childList2 valid=\"false\"/>\n"
@@ -468,7 +408,7 @@ public class JaxbBeanUnmarshallerTest {
                 + "  <childList1 valid=\"false\"/>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         List<JaxbParent> list = result.getTwoTypeList();
         {
             JaxbParent child = list.get(0);
@@ -494,8 +434,6 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalElementsWrapper() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <options6>\n"
                 + "    <child1 valid=\"true\"/>\n"
@@ -503,7 +441,7 @@ public class JaxbBeanUnmarshallerTest {
                 + "  </options6>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         List<JaxbParent> list = result.getOptions6();
         {
             JaxbParent child = list.get(0);
@@ -519,28 +457,24 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalXmlValue() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <child>\n"
                 + "    <note>A child</note>\n"
                 + "  </child>\n"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class);
         assertThat(result.getChild().getNote().getText(), is("A child"));
     }
 
     @Test
     public void canUnmarshalXmlElementRefSublasses() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class, JaxbObject2.class);
-
         {
             String xml = "<secondJaxbObject xmlns=\"http://example.com/jaxb\">\n"
                     + "  <jaxbObject displayName=\"First ref\"/>\n"
                     + "</secondJaxbObject>";
 
-            JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
+            JaxbObject2 result = unmarshal(xml, JaxbObject2.class, JaxbObject.class);
             assertThat(((JaxbObject) result.getMultiGlobalChild()).getId(), is("First ref"));
         }
         {
@@ -548,22 +482,20 @@ public class JaxbBeanUnmarshallerTest {
                     + "  <secondJaxbObject valid=\"true\"/>\n"
                     + "</secondJaxbObject>";
 
-            JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
+            JaxbObject2 result = unmarshal(xml, JaxbObject2.class, JaxbObject.class);
             assertThat(((JaxbObject2) result.getMultiGlobalChild()).isValid(), is(true));
         }
     }
 
     @Test
     public void canUnmarshalXmlElementRefList() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject.class, Message.class, Annotation.class);
-
         String xml = "<jaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <message>1st rev: An object</message>\n"
                 + "  <annotation>Dangerous one</annotation>"
                 + "  <message>2nd rev: Reduce power</message>"
                 + "</jaxbObject>";
 
-        JaxbObject result = (JaxbObject) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject result = unmarshal(xml, JaxbObject.class, Message.class, Annotation.class);
         List<Note<?>> notes = result.getNotes();
         assertThat(((Message) notes.get(0)).getText(), is("1st rev: An object"));
         assertThat(((Annotation) notes.get(1)).getText(), is("Dangerous one"));
@@ -572,20 +504,16 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void shouldNotConfuseLocalElementForGlobalElementWithSameName() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject2.class, Annotation.class);
-
         String xml = "<secondJaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <annotation>WIP</annotation>"
                 + "</secondJaxbObject>";
 
-        JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject2 result = unmarshal(xml, JaxbObject2.class);
         assertThat(result.getAnnotation().getText(), is("WIP"));
     }
 
     @Test
     public void canUnmarshalElementWithXmlJavaTypeAdapter() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject2.class);
-
         String xml = "<secondJaxbObject xmlns=\"http://example.com/jaxb\">\n"
                 + "  <metadata>\n"
                 + "    <entry key=\"author\" value=\"Me\"/>\n"
@@ -593,7 +521,7 @@ public class JaxbBeanUnmarshallerTest {
                 + "  </metadata>\n"
                 + "</secondJaxbObject>";
 
-        JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject2 result = unmarshal(xml, JaxbObject2.class);
         Map<String, String> metadata = result.getMetadata();
         assertThat(metadata, hasEntry("author", "Me"));
         assertThat(metadata, hasEntry("obsolete", "Yes"));
@@ -601,15 +529,22 @@ public class JaxbBeanUnmarshallerTest {
 
     @Test
     public void canUnmarshalAttributeWithXmlJavaTypeAdapter() throws Exception {
-        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(JaxbObject2.class);
-
         String xml = "<secondJaxbObject"
                 + "      xmlns=\"http://example.com/jaxb\""
                 + "      annotationAttr=\"WIP\">\n"
                 + "</secondJaxbObject>";
 
-        JaxbObject2 result = (JaxbObject2) unmarshaller.unmarshal(toElement(xml));
+        JaxbObject2 result = unmarshal(xml, JaxbObject2.class);
         assertThat(result.getAnnotationAttr().getText(), is("WIP"));
+    }
+
+    private <T> T unmarshal(String xml, Class<T> type, Class<?>... otherTypes) throws Exception {
+        List<Class<?>> allTypes = new ArrayList<Class<?>>();
+        allTypes.add(type);
+        allTypes.addAll(Arrays.asList(otherTypes));
+
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(allTypes.toArray(new Class<?>[allTypes.size()]));
+        return type.cast(unmarshaller.unmarshal(toElement(xml)));
     }
 
     private static Element toElement(String xml) throws Exception {
