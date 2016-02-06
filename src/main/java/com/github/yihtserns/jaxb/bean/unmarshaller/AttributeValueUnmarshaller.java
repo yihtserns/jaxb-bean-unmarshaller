@@ -21,7 +21,7 @@ import org.w3c.dom.Attr;
  *
  * @author yihtserns
  */
-public enum AttributeValueUnmarshaller implements Unmarshaller<Attr> {
+enum AttributeValueUnmarshaller implements Unmarshaller<Attr> {
 
     INSTANCE;
 
