@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.yihtserns.jaxb.bean.unmarshaller;
+package com.github.yihtserns.jaxbean.unmarshaller;
 
-import com.github.yihtserns.jaxb.bean.unmarshaller.api.BeanHandler;
-import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.InitializableElementUnmarshaller;
-import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider;
-import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider.Handler;
+import com.github.yihtserns.jaxbean.unmarshaller.api.BeanHandler;
+import com.github.yihtserns.jaxbean.unmarshaller.Unmarshaller.InitializableElementUnmarshaller;
+import com.github.yihtserns.jaxbean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider;
+import com.github.yihtserns.jaxbean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider.Handler;
 import java.beans.Introspector;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,14 +32,14 @@ import org.w3c.dom.Element;
  *
  * @author yihtserns
  */
-public class JaxbBeanUnmarshaller {
+public class JaxbeanUnmarshaller {
 
     private Map<String, Unmarshaller<Element>> globalName2Unmarshaller;
 
     /**
      * @see #newInstance(java.lang.Class...)
      */
-    private JaxbBeanUnmarshaller(Map<String, Unmarshaller<Element>> globalName2Unmarshaller) {
+    private JaxbeanUnmarshaller(Map<String, Unmarshaller<Element>> globalName2Unmarshaller) {
         this.globalName2Unmarshaller = globalName2Unmarshaller;
     }
 
@@ -50,14 +50,14 @@ public class JaxbBeanUnmarshaller {
         return unmarshaller.unmarshal(element, beanHandler);
     }
 
-    public static JaxbBeanUnmarshaller newInstance(Class<?>... types) throws Exception {
+    public static JaxbeanUnmarshaller newInstance(Class<?>... types) throws Exception {
         Builder builder = new Builder();
         for (Class<?> type : types) {
             builder.addGlobalType(type);
         }
         builder.init();
 
-        return new JaxbBeanUnmarshaller(builder.globalName2Unmarshaller);
+        return new JaxbeanUnmarshaller(builder.globalName2Unmarshaller);
     }
 
     private static class Builder implements ElementUnmarshallerProvider {

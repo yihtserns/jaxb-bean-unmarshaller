@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.yihtserns.jaxb.bean.unmarshaller;
+package com.github.yihtserns.jaxbean.unmarshaller;
 
-import com.github.yihtserns.jaxb.bean.unmarshaller.api.BeanHandler;
+import com.github.yihtserns.jaxbean.unmarshaller.api.BeanHandler;
 import org.w3c.dom.Element;
 
 /**

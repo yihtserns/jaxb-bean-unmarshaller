@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.yihtserns.jaxb.bean.unmarshaller.api;
+package com.github.yihtserns.jaxbean.unmarshaller.api;
 
 import java.util.List;
 import javax.xml.bind.annotation.adapters.XmlAdapter;

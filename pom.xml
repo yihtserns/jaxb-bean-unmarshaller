@@ -7,15 +7,15 @@
         <relativePath/>
     </parent>
     <groupId>com.github.yihtserns</groupId>
-    <artifactId>jaxb-bean-unmarshaller</artifactId>
+    <artifactId>jaxbean-unmarshaller</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>JAXB Bean Unmarshaller</name>
-    <description></description>
-    <url>http://github.com/yihtserns/jaxb-bean-unmarshaller</url>
+    <name>JAXBean Unmarshaller</name>
+    <description>Just Another Xml-Bean Unmarshaller</description>
+    <url>http://github.com/yihtserns/jaxbean-unmarshaller</url>
     <issueManagement>
-        <url>http://github.com/yihtserns/jaxb-bean-unmarshaller/issues</url>
+        <url>http://github.com/yihtserns/jaxbean-unmarshaller/issues</url>
     </issueManagement>
 
     <licenses>
@@ -27,9 +27,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git@github.com:yihtserns/jaxb-bean-unmarshaller.git</connection>
-        <developerConnection>scm:git:git@github.com:yihtserns/jaxb-bean-unmarshaller.git</developerConnection>
-        <url>git@github.com:yihtserns/jaxb-bean-unmarshaller.git</url>
+        <connection>scm:git:git@github.com:yihtserns/jaxbean-unmarshaller.git</connection>
+        <developerConnection>scm:git:git@github.com:yihtserns/jaxbean-unmarshaller.git</developerConnection>
+        <url>git@github.com:yihtserns/jaxbean-unmarshaller.git</url>
     </scm>
 
     <developers>

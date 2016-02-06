@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.yihtserns.jaxb.bean.unmarshaller;
+package com.github.yihtserns.jaxbean.unmarshaller;
 
-import com.github.yihtserns.jaxb.bean.unmarshaller.api.InstanceBeanHandler;
-import com.github.yihtserns.jaxb.bean.unmarshaller.api.SpringBeanHandler;
+import com.github.yihtserns.jaxbean.unmarshaller.api.InstanceBeanHandler;
+import com.github.yihtserns.jaxbean.unmarshaller.api.SpringBeanHandler;
 import java.io.StringReader;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -38,7 +38,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
-import static com.github.yihtserns.jaxb.bean.unmarshaller.AbstractSpecTest.merge;
+import static com.github.yihtserns.jaxbean.unmarshaller.AbstractSpecTest.merge;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
@@ -48,13 +48,13 @@ import static org.hamcrest.Matchers.is;
  * @author yihtserns
  */
 @RunWith(Enclosed.class)
-public class JaxbBeanUnmarshallerTest {
+public class JaxbeanUnmarshallerTest {
 
     public static final class ToObjectTest extends AbstractSpecTest {
 
         @Override
         protected <T> T unmarshal(String xml, Class<T> rootType, Class<?>... allTypes) throws Exception {
-            JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(merge(rootType, allTypes));
+            JaxbeanUnmarshaller unmarshaller = JaxbeanUnmarshaller.newInstance(merge(rootType, allTypes));
 
             return rootType.cast(unmarshaller.unmarshal(toElement(xml), InstanceBeanHandler.INSTANCE));
         }
@@ -71,7 +71,7 @@ public class JaxbBeanUnmarshallerTest {
 
         @Override
         protected <T> T unmarshal(String xml, Class<T> rootType, Class<?>... allTypes) throws Exception {
-            JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(merge(rootType, allTypes));
+            JaxbeanUnmarshaller unmarshaller = JaxbeanUnmarshaller.newInstance(merge(rootType, allTypes));
             final UnmarshallerNamespaceHandler unmarshallerNamespaceHandler = new UnmarshallerNamespaceHandler(unmarshaller);
 
             GenericApplicationContext appContext = new GenericApplicationContext();
@@ -340,9 +340,9 @@ public class JaxbBeanUnmarshallerTest {
 
         private static final class UnmarshallerNamespaceHandler extends AbstractBeanDefinitionParser implements NamespaceHandler {
 
-            private JaxbBeanUnmarshaller unmarshaller;
+            private JaxbeanUnmarshaller unmarshaller;
 
-            public UnmarshallerNamespaceHandler(JaxbBeanUnmarshaller unmarshaller) {
+            public UnmarshallerNamespaceHandler(JaxbeanUnmarshaller unmarshaller) {
                 this.unmarshaller = unmarshaller;
             }
 
