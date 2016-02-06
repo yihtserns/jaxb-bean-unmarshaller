@@ -112,7 +112,7 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
     }
 
     protected <N extends Node> Unmarshaller<N> newXmlAdapterUnmarshaller(XmlAdapter adapter, Unmarshaller<N> unmarshaller) {
-        return XmlAdapterUnmarshaller.create(adapter, unmarshaller);
+        return new XmlAdapterUnmarshaller(adapter, unmarshaller);
     }
 
     public <T extends AccessibleObject> void addElements(

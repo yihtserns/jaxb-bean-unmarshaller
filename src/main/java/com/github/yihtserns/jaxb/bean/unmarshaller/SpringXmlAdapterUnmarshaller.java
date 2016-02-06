@@ -15,8 +15,6 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -31,7 +29,7 @@ class SpringXmlAdapterUnmarshaller implements Unmarshaller {
     private XmlAdapter xmlAdapter;
     private Unmarshaller delegate;
 
-    private SpringXmlAdapterUnmarshaller(XmlAdapter xmlAdapter, Unmarshaller delegate) {
+    public SpringXmlAdapterUnmarshaller(XmlAdapter xmlAdapter, Unmarshaller delegate) {
         this.xmlAdapter = xmlAdapter;
         this.delegate = delegate;
     }
@@ -44,9 +42,5 @@ class SpringXmlAdapterUnmarshaller implements Unmarshaller {
                 .addPropertyValue("targetMethod", "unmarshal")
                 .addPropertyValue("arguments", value)
                 .getBeanDefinition();
-    }
-
-    public static <N extends Node> Unmarshaller<N> create(XmlAdapter xmlAdapter, Unmarshaller<N> delegate) {
-        return new SpringXmlAdapterUnmarshaller(xmlAdapter, delegate);
     }
 }

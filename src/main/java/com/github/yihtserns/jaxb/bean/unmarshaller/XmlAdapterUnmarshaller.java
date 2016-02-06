@@ -27,16 +27,12 @@ class XmlAdapterUnmarshaller<N extends Node> implements Unmarshaller<N> {
     private XmlAdapter xmlAdapter;
     private Unmarshaller<N> delegate;
 
-    private XmlAdapterUnmarshaller(XmlAdapter xmlAdapter, Unmarshaller<N> delegate) {
+    public XmlAdapterUnmarshaller(XmlAdapter xmlAdapter, Unmarshaller<N> delegate) {
         this.xmlAdapter = xmlAdapter;
         this.delegate = delegate;
     }
 
     public Object unmarshal(N node) throws Exception {
         return xmlAdapter.unmarshal(delegate.unmarshal(node));
-    }
-
-    public static <N extends Node> XmlAdapterUnmarshaller<N> create(XmlAdapter xmlAdapter, Unmarshaller<N> delegate) {
-        return new XmlAdapterUnmarshaller(xmlAdapter, delegate);
     }
 }
