@@ -26,25 +26,25 @@ import org.springframework.beans.PropertyAccessorFactory;
  *
  * @author yihtserns
  */
-public enum InstanceBeanHandler implements BeanHandler {
+public enum InstanceBeanHandler implements BeanHandler<BeanWrapper> {
 
     INSTANCE;
 
     @Override
-    public Object createBean(Class<?> beanClass) throws Exception {
+    public BeanWrapper createBean(Class<?> beanClass) throws Exception {
         Object instance = beanClass.newInstance();
 
         return PropertyAccessorFactory.forBeanPropertyAccess(instance);
     }
 
     @Override
-    public void setBeanProperty(Object bean, String propertyName, Object propertyValue) {
-        ((BeanWrapper) bean).setPropertyValue(propertyName, propertyValue);
+    public void setBeanProperty(BeanWrapper bean, String propertyName, Object propertyValue) {
+        bean.setPropertyValue(propertyName, propertyValue);
     }
 
     @Override
-    public List getOrCreateValueList(Object bean, String propertyName) {
-        Object valueList = ((BeanWrapper) bean).getPropertyValue(propertyName);
+    public List<Object> getOrCreateValueList(BeanWrapper bean, String propertyName) {
+        Object valueList = bean.getPropertyValue(propertyName);
         if (valueList == null) {
             valueList = newList();
         } else if (valueList.getClass().isArray()) {
@@ -65,7 +65,7 @@ public enum InstanceBeanHandler implements BeanHandler {
     }
 
     @Override
-    public Object postProcess(Object bean) {
-        return ((BeanWrapper) bean).getWrappedInstance();
+    public Object postProcess(BeanWrapper bean) {
+        return bean.getWrappedInstance();
     }
 }

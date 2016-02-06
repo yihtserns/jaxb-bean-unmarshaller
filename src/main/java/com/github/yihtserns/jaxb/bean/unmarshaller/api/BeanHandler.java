@@ -22,17 +22,17 @@ import javax.xml.bind.annotation.adapters.XmlAdapter;
  *
  * @author yihtserns
  */
-public interface BeanHandler {
+public interface BeanHandler<T> {
 
-    Object createBean(Class<?> beanClass) throws Exception;
+    T createBean(Class<?> beanClass) throws Exception;
 
-    void setBeanProperty(Object bean, String propertyName, Object propertyValue);
+    void setBeanProperty(T bean, String propertyName, Object propertyValue);
 
-    List<Object> getOrCreateValueList(Object bean, String propertyName);
+    List<Object> getOrCreateValueList(T bean, String propertyName);
 
     List<Object> newList();
 
     Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception;
 
-    Object postProcess(Object bean);
+    Object postProcess(T bean);
 }

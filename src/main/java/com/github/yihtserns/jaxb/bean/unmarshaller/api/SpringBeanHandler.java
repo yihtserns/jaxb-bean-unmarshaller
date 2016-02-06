@@ -26,7 +26,7 @@ import org.springframework.beans.factory.support.ManagedList;
  *
  * @author yihtserns
  */
-public enum SpringBeanHandler implements BeanHandler {
+public enum SpringBeanHandler implements BeanHandler<BeanDefinitionBuilder> {
 
     INSTANCE;
 
@@ -36,13 +36,13 @@ public enum SpringBeanHandler implements BeanHandler {
     }
 
     @Override
-    public void setBeanProperty(Object bean, String propertyName, Object propertyValue) {
-        ((BeanDefinitionBuilder) bean).addPropertyValue(propertyName, propertyValue);
+    public void setBeanProperty(BeanDefinitionBuilder bean, String propertyName, Object propertyValue) {
+        bean.addPropertyValue(propertyName, propertyValue);
     }
 
     @Override
-    public List getOrCreateValueList(Object bean, String propertyName) {
-        PropertyValue propertyValue = ((BeanDefinitionBuilder) bean).getRawBeanDefinition().getPropertyValues().getPropertyValue(propertyName);
+    public List<Object> getOrCreateValueList(BeanDefinitionBuilder bean, String propertyName) {
+        PropertyValue propertyValue = bean.getRawBeanDefinition().getPropertyValues().getPropertyValue(propertyName);
         List valueList;
         if (propertyValue == null) {
             valueList = newList();
@@ -67,7 +67,7 @@ public enum SpringBeanHandler implements BeanHandler {
     }
 
     @Override
-    public Object postProcess(Object bean) {
-        return ((BeanDefinitionBuilder) bean).getBeanDefinition();
+    public Object postProcess(BeanDefinitionBuilder bean) {
+        return bean.getBeanDefinition();
     }
 }
