@@ -19,7 +19,6 @@ import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.InitializableEle
 import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider;
 import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider.Handler;
 import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,22 +51,16 @@ import org.w3c.dom.NodeList;
 class BeanUnmarshaller implements InitializableElementUnmarshaller {
 
     public static final String AUTO_GENERATED_NAME = "##default";
-    Set<String> listTypeElementNames = new HashSet<String>();
-    Map<String, String> elementName2PropertyName = new HashMap<String, String>();
-    Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
-    Map<String, Unmarshaller<Attr>> attributeName2Unmarshaller = new HashMap<String, Unmarshaller<Attr>>();
-    Map<String, Unmarshaller<Element>> localName2Unmarshaller = new HashMap<String, Unmarshaller<Element>>();
-    String textContentPropertyName = null;
+    private Set<String> listTypeElementNames = new HashSet<String>();
+    private Map<String, String> elementName2PropertyName = new HashMap<String, String>();
+    private Map<String, String> attributeName2PropertyName = new HashMap<String, String>();
+    private Map<String, Unmarshaller<Attr>> attributeName2Unmarshaller = new HashMap<String, Unmarshaller<Attr>>();
+    private Map<String, Unmarshaller<Element>> localName2Unmarshaller = new HashMap<String, Unmarshaller<Element>>();
+    private String textContentPropertyName = null;
     final Class<?> beanClass;
-    Constructor constructor;
-
-    BeanUnmarshaller(Constructor constructor) {
-        this.beanClass = constructor.getDeclaringClass();
-        this.constructor = constructor;
-    }
 
     protected BeanUnmarshaller(Class<?> beanClass) throws Exception {
-        this(beanClass.getDeclaredConstructor());
+        this.beanClass = beanClass;
     }
 
     @Override
@@ -217,8 +210,7 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
 
     @Override
     public Object unmarshal(Element element) throws Exception {
-        Object instance = constructor.newInstance();
-        BeanWrapper bean = PropertyAccessorFactory.forBeanPropertyAccess(instance);
+        Object bean = createBean(beanClass);
         NamedNodeMap attributes = element.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Attr attr = (Attr) attributes.item(i);
@@ -231,7 +223,7 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
             String propertyName = attributeName2PropertyName.get(attributeName);
             Object propertyValue = unmarshaller.unmarshal(attr);
 
-            bean.setPropertyValue(propertyName, propertyValue);
+            setBeanProperty(bean, propertyName, propertyValue);
         }
         NodeList childNodes = element.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
@@ -245,26 +237,46 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
             Object childInstance = childUnmarshaller.unmarshal(childElement);
             String propertyName = elementName2PropertyName.get(localName);
             if (listTypeElementNames.contains(localName)) {
-                Object valueList = bean.getPropertyValue(propertyName);
-                if (valueList == null) {
-                    valueList = new ArrayList();
-                } else if (valueList.getClass().isArray()) {
-                    valueList = new ArrayList(Arrays.asList((Object[]) valueList));
-                }
-                ((List) valueList).add(childInstance);
+                List valueList = getOrCreateValueList(bean, propertyName);
+
+                valueList.add(childInstance);
                 childInstance = valueList;
             }
-            bean.setPropertyValue(propertyName, childInstance);
+            setBeanProperty(bean, propertyName, childInstance);
         }
         if (textContentPropertyName != null) {
-            bean.setPropertyValue(textContentPropertyName, element.getTextContent());
+            setBeanProperty(bean, textContentPropertyName, element.getTextContent());
         }
-        return instance;
+        return postProcess(bean);
+    }
+
+    protected Object createBean(Class<?> beanClass) throws Exception {
+        Object instance = beanClass.newInstance();
+
+        return PropertyAccessorFactory.forBeanPropertyAccess(instance);
+    }
+
+    protected void setBeanProperty(Object bean, String propertyName, Object propertyValue) {
+        ((BeanWrapper) bean).setPropertyValue(propertyName, propertyValue);
+    }
+
+    protected List getOrCreateValueList(Object bean, String propertyName) {
+        Object valueList = ((BeanWrapper) bean).getPropertyValue(propertyName);
+        if (valueList == null) {
+            valueList = new ArrayList();
+        } else if (valueList.getClass().isArray()) {
+            valueList = new ArrayList(Arrays.asList((Object[]) valueList));
+        }
+
+        return (List) valueList;
+    }
+
+    protected Object postProcess(Object bean) {
+        return ((BeanWrapper) bean).getWrappedInstance();
     }
 
     private boolean isNamespaceDeclaration(Attr attr) {
         String fullName = attr.getName();
         return fullName.equals("xmlns") || fullName.startsWith("xmlns:");
     }
-
 }

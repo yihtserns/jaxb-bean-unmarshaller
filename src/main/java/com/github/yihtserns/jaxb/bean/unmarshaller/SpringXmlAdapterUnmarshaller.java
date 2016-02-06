@@ -24,23 +24,18 @@ import org.w3c.dom.Node;
  *
  * @author yihtserns
  */
-class SpringXmlAdapterUnmarshaller implements Unmarshaller {
-
-    private XmlAdapter xmlAdapter;
-    private Unmarshaller delegate;
+class SpringXmlAdapterUnmarshaller<N extends Node> extends XmlAdapterUnmarshaller<N> {
 
     public SpringXmlAdapterUnmarshaller(XmlAdapter xmlAdapter, Unmarshaller delegate) {
-        this.xmlAdapter = xmlAdapter;
-        this.delegate = delegate;
+        super(xmlAdapter, delegate);
     }
 
-    public Object unmarshal(Node node) throws Exception {
-        Object value = delegate.unmarshal(node);
-
+    @Override
+    protected Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception {
         return BeanDefinitionBuilder.genericBeanDefinition(MethodInvokingFactoryBean.class)
                 .addPropertyValue("targetObject", xmlAdapter)
                 .addPropertyValue("targetMethod", "unmarshal")
-                .addPropertyValue("arguments", value)
+                .addPropertyValue("arguments", from)
                 .getBeanDefinition();
     }
 }

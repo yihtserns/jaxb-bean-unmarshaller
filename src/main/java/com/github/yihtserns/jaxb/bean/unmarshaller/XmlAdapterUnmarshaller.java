@@ -33,6 +33,10 @@ class XmlAdapterUnmarshaller<N extends Node> implements Unmarshaller<N> {
     }
 
     public Object unmarshal(N node) throws Exception {
-        return xmlAdapter.unmarshal(delegate.unmarshal(node));
+        return unmarshalWith(xmlAdapter, delegate.unmarshal(node));
+    }
+
+    protected Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception {
+        return xmlAdapter.unmarshal(from);
     }
 }

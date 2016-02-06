@@ -59,7 +59,23 @@ public class JaxbBeanUnmarshaller {
         return new JaxbBeanUnmarshaller(builder.globalName2Unmarshaller);
     }
 
-    private static final class Builder implements ElementUnmarshallerProvider {
+    public static JaxbBeanUnmarshaller forSpring(Class<?>... types) throws Exception {
+        Builder builder = new Builder() {
+
+            @Override
+            protected InitializableElementUnmarshaller createBeanUnmarshaller(Class<?> type) throws Exception {
+                return new SpringBeanUnmarshaller(type);
+            }
+        };
+        for (Class<?> type : types) {
+            builder.addGlobalType(type);
+        }
+        builder.init();
+
+        return new JaxbBeanUnmarshaller(builder.globalName2Unmarshaller);
+    }
+
+    private static class Builder implements ElementUnmarshallerProvider {
 
         private Map<String, Unmarshaller<Element>> globalName2Unmarshaller = new HashMap<String, Unmarshaller<Element>>();
         private Map<Class<?>, String> globalType2Name = new HashMap<Class<?>, String>();
@@ -100,10 +116,14 @@ public class JaxbBeanUnmarshaller {
                 return ElementTextContentUnmarshaller.INSTANCE;
             }
 
-            InitializableElementUnmarshaller unmarshaller = new BeanUnmarshaller(type.getDeclaredConstructor());
+            InitializableElementUnmarshaller unmarshaller = createBeanUnmarshaller(type);
             type2Unmarshaller.put(type, unmarshaller);
 
             return unmarshaller;
+        }
+
+        protected InitializableElementUnmarshaller createBeanUnmarshaller(Class<?> type) throws Exception {
+            return new BeanUnmarshaller(type);
         }
 
         @Override

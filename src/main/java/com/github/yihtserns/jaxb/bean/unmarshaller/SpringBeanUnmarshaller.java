@@ -18,26 +18,18 @@ package com.github.yihtserns.jaxb.bean.unmarshaller;
 import java.util.List;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import org.springframework.beans.PropertyValue;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedList;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  *
  * @author yihtserns
  */
-public class SpringBeanUnmarshaller extends BeanUnmarshaller {
-
-    private Class<?> beanClass;
+class SpringBeanUnmarshaller extends BeanUnmarshaller {
 
     public SpringBeanUnmarshaller(Class<?> beanClass) throws Exception {
         super(beanClass);
-        this.beanClass = beanClass;
     }
 
     @Override
@@ -51,59 +43,29 @@ public class SpringBeanUnmarshaller extends BeanUnmarshaller {
     }
 
     @Override
-    public BeanDefinition unmarshal(Element element) throws Exception {
-        BeanDefinitionBuilder bean = BeanDefinitionBuilder.genericBeanDefinition(beanClass);
-        NamedNodeMap attributes = element.getAttributes();
-        for (int i = 0; i < attributes.getLength(); i++) {
-            Attr attr = (Attr) attributes.item(i);
-            if (isNamespaceDeclaration(attr)) {
-                continue;
-            }
-            String attributeName = attr.getName();
-            Unmarshaller<Attr> unmarshaller = attributeName2Unmarshaller.get(attributeName);
-
-            String propertyName = attributeName2PropertyName.get(attributeName);
-            Object propertyValue = unmarshaller.unmarshal(attr);
-
-            bean.addPropertyValue(propertyName, propertyValue);
-        }
-        NodeList childNodes = element.getChildNodes();
-        for (int i = 0; i < childNodes.getLength(); i++) {
-            Node item = childNodes.item(i);
-            if (item.getNodeType() != Node.ELEMENT_NODE) {
-                continue;
-            }
-            Element childElement = (Element) item;
-            String localName = item.getLocalName();
-
-            Unmarshaller<Element> childUnmarshaller = localName2Unmarshaller.get(localName);
-            Object childInstance = childUnmarshaller.unmarshal(childElement);
-            String propertyName = elementName2PropertyName.get(localName);
-
-            if (listTypeElementNames.contains(localName)) {
-                PropertyValue propertyValue = bean.getRawBeanDefinition().getPropertyValues().getPropertyValue(propertyName);
-                List valueList;
-                if (propertyValue == null) {
-                    valueList = new ManagedList();
-                } else {
-                    valueList = (List) propertyValue.getValue();
-                }
-                ((List) valueList).add(childInstance);
-                childInstance = valueList;
-            }
-
-            bean.addPropertyValue(propertyName, childInstance);
-        }
-
-        if (textContentPropertyName != null) {
-            bean.addPropertyValue(textContentPropertyName, element.getTextContent());
-        }
-
-        return bean.getBeanDefinition();
+    protected BeanDefinitionBuilder createBean(Class<?> beanClass) {
+        return BeanDefinitionBuilder.genericBeanDefinition(beanClass);
     }
 
-    private boolean isNamespaceDeclaration(Attr attr) {
-        String fullName = attr.getName();
-        return fullName.equals("xmlns") || fullName.startsWith("xmlns:");
+    @Override
+    protected void setBeanProperty(Object bean, String propertyName, Object propertyValue) {
+        ((BeanDefinitionBuilder) bean).addPropertyValue(propertyName, propertyValue);
+    }
+
+    @Override
+    protected List getOrCreateValueList(Object bean, String propertyName) {
+        PropertyValue propertyValue = ((BeanDefinitionBuilder) bean).getRawBeanDefinition().getPropertyValues().getPropertyValue(propertyName);
+        List valueList;
+        if (propertyValue == null) {
+            valueList = new ManagedList();
+        } else {
+            valueList = (List) propertyValue.getValue();
+        }
+        return valueList;
+    }
+
+    @Override
+    protected Object postProcess(Object bean) {
+        return ((BeanDefinitionBuilder) bean).getBeanDefinition();
     }
 }

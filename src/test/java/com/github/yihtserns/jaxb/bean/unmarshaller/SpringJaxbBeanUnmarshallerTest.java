@@ -42,7 +42,7 @@ public class SpringJaxbBeanUnmarshallerTest extends AbstractSpecTest {
 
     @Override
     protected <T> T unmarshal(String xml, Class<T> rootType, Class<?>... allTypes) throws Exception {
-        SpringJaxbBeanUnmarshaller unmarshaller = SpringJaxbBeanUnmarshaller.newInstance(merge(rootType, allTypes));
+        JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.forSpring(merge(rootType, allTypes));
         final UnmarshallerNamespaceHandler unmarshallerNamespaceHandler = new UnmarshallerNamespaceHandler(unmarshaller);
 
         GenericApplicationContext appContext = new GenericApplicationContext();
@@ -311,9 +311,9 @@ public class SpringJaxbBeanUnmarshallerTest extends AbstractSpecTest {
 
     private static final class UnmarshallerNamespaceHandler extends AbstractBeanDefinitionParser implements NamespaceHandler {
 
-        private SpringJaxbBeanUnmarshaller unmarshaller;
+        private JaxbBeanUnmarshaller unmarshaller;
 
-        public UnmarshallerNamespaceHandler(SpringJaxbBeanUnmarshaller unmarshaller) {
+        public UnmarshallerNamespaceHandler(JaxbBeanUnmarshaller unmarshaller) {
             this.unmarshaller = unmarshaller;
         }
 
