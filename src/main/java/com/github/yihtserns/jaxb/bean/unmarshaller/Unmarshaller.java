@@ -15,6 +15,7 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
+import com.github.yihtserns.jaxb.bean.unmarshaller.api.BeanHandler;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -24,7 +25,7 @@ import org.w3c.dom.Node;
  */
 interface Unmarshaller<N extends Node> {
 
-    Object unmarshal(N node) throws Exception;
+    Object unmarshal(N node, BeanHandler beanHandler) throws Exception;
 
     interface InitializableElementUnmarshaller extends Unmarshaller<Element> {
 

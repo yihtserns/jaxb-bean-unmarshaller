@@ -15,13 +15,12 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
+import com.github.yihtserns.jaxb.bean.unmarshaller.api.BeanHandler;
 import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.InitializableElementUnmarshaller;
 import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider;
 import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider.Handler;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,8 +35,6 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.PropertyAccessorFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -97,15 +94,11 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
         Unmarshaller<Attr> unmarshaller = AttributeValueUnmarshaller.INSTANCE;
         if (accObj.isAnnotationPresent(XmlJavaTypeAdapter.class)) {
             XmlAdapter adapter = accObj.getAnnotation(XmlJavaTypeAdapter.class).value().newInstance();
-            unmarshaller = BeanUnmarshaller.this.newXmlAdapterUnmarshaller(adapter, unmarshaller);
+            unmarshaller = new XmlAdapterUnmarshaller(adapter, unmarshaller);
         }
 
         attributeName2PropertyName.put(attributeName, propertyName);
         attributeName2Unmarshaller.put(attributeName, unmarshaller);
-    }
-
-    protected <N extends Node> Unmarshaller<N> newXmlAdapterUnmarshaller(XmlAdapter adapter, Unmarshaller<N> unmarshaller) {
-        return new XmlAdapterUnmarshaller(adapter, unmarshaller);
     }
 
     public <T extends AccessibleObject> void addElements(
@@ -164,7 +157,7 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
             Unmarshaller<Element> unmarshaller = unmarshallerProvider.getUnmarshallerForType(valueType);
 
             XmlAdapter adapter = adapterClass.newInstance();
-            return newXmlAdapterUnmarshaller(adapter, unmarshaller);
+            return new XmlAdapterUnmarshaller(adapter, unmarshaller);
         }
 
         Class<?> type = xmlElement.type();
@@ -209,8 +202,8 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
     }
 
     @Override
-    public Object unmarshal(Element element) throws Exception {
-        Object bean = createBean(beanClass);
+    public Object unmarshal(Element element, BeanHandler beanHandler) throws Exception {
+        Object bean = beanHandler.createBean(beanClass);
         NamedNodeMap attributes = element.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Attr attr = (Attr) attributes.item(i);
@@ -221,9 +214,9 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
             Unmarshaller<Attr> unmarshaller = attributeName2Unmarshaller.get(attributeName);
 
             String propertyName = attributeName2PropertyName.get(attributeName);
-            Object propertyValue = unmarshaller.unmarshal(attr);
+            Object propertyValue = unmarshaller.unmarshal(attr, beanHandler);
 
-            setBeanProperty(bean, propertyName, propertyValue);
+            beanHandler.setBeanProperty(bean, propertyName, propertyValue);
         }
         NodeList childNodes = element.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
@@ -234,45 +227,20 @@ class BeanUnmarshaller implements InitializableElementUnmarshaller {
             Element childElement = (Element) item;
             String localName = item.getLocalName();
             Unmarshaller<Element> childUnmarshaller = localName2Unmarshaller.get(localName);
-            Object childInstance = childUnmarshaller.unmarshal(childElement);
+            Object childInstance = childUnmarshaller.unmarshal(childElement, beanHandler);
             String propertyName = elementName2PropertyName.get(localName);
             if (listTypeElementNames.contains(localName)) {
-                List valueList = getOrCreateValueList(bean, propertyName);
+                List valueList = beanHandler.getOrCreateValueList(bean, propertyName);
 
                 valueList.add(childInstance);
                 childInstance = valueList;
             }
-            setBeanProperty(bean, propertyName, childInstance);
+            beanHandler.setBeanProperty(bean, propertyName, childInstance);
         }
         if (textContentPropertyName != null) {
-            setBeanProperty(bean, textContentPropertyName, element.getTextContent());
+            beanHandler.setBeanProperty(bean, textContentPropertyName, element.getTextContent());
         }
-        return postProcess(bean);
-    }
-
-    protected Object createBean(Class<?> beanClass) throws Exception {
-        Object instance = beanClass.newInstance();
-
-        return PropertyAccessorFactory.forBeanPropertyAccess(instance);
-    }
-
-    protected void setBeanProperty(Object bean, String propertyName, Object propertyValue) {
-        ((BeanWrapper) bean).setPropertyValue(propertyName, propertyValue);
-    }
-
-    protected List getOrCreateValueList(Object bean, String propertyName) {
-        Object valueList = ((BeanWrapper) bean).getPropertyValue(propertyName);
-        if (valueList == null) {
-            valueList = new ArrayList();
-        } else if (valueList.getClass().isArray()) {
-            valueList = new ArrayList(Arrays.asList((Object[]) valueList));
-        }
-
-        return (List) valueList;
-    }
-
-    protected Object postProcess(Object bean) {
-        return ((BeanWrapper) bean).getWrappedInstance();
+        return beanHandler.postProcess(bean);
     }
 
     private boolean isNamespaceDeclaration(Attr attr) {

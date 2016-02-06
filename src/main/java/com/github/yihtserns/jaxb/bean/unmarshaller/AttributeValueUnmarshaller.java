@@ -15,6 +15,7 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
+import com.github.yihtserns.jaxb.bean.unmarshaller.api.BeanHandler;
 import org.w3c.dom.Attr;
 
 /**
@@ -25,7 +26,7 @@ enum AttributeValueUnmarshaller implements Unmarshaller<Attr> {
 
     INSTANCE;
 
-    public Object unmarshal(Attr attribute) {
+    public Object unmarshal(Attr attribute, BeanHandler beanHandler) {
         return attribute.getValue();
     }
 }

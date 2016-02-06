@@ -497,7 +497,7 @@ public abstract class AbstractSpecTest {
     }
 
     @XmlRootElement(namespace = "http://example.com/jaxb")
-    static final class JaxbObject extends JaxbParent {
+    public static final class JaxbObject extends JaxbParent {
 
         @XmlAttribute(name = "displayName")
         private String id;
@@ -807,7 +807,7 @@ public abstract class AbstractSpecTest {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    static final class JaxbChild extends JaxbParent {
+    public static final class JaxbChild extends JaxbParent {
 
         @XmlAttribute
         private String name;
@@ -841,12 +841,12 @@ public abstract class AbstractSpecTest {
         }
     }
 
-    static final class JaxbChild2 extends JaxbParent {
+    public static final class JaxbChild2 extends JaxbParent {
 
     }
 
     @XmlRootElement(name = "secondJaxbObject", namespace = "http://example.com/jaxb")
-    static final class JaxbObject2 extends JaxbParent {
+    public static final class JaxbObject2 extends JaxbParent {
 
         @XmlElementRef
         private JaxbParent multiGlobalChild;
@@ -893,14 +893,14 @@ public abstract class AbstractSpecTest {
     }
 
     @XmlRootElement
-    static class Message extends Note {
+    public static class Message extends Note {
     }
 
     @XmlRootElement
-    static class Annotation extends Note {
+    public static class Annotation extends Note {
     }
 
-    static class SideNote extends Note {
+    public static class SideNote extends Note {
 
         public static final class Adapter extends XmlAdapter<String, SideNote> {
 
@@ -920,7 +920,7 @@ public abstract class AbstractSpecTest {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    static class Note<T> {
+    public static class Note<T> {
 
         @XmlValue
         private String text;
@@ -935,7 +935,7 @@ public abstract class AbstractSpecTest {
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
-    static class Metadata {
+    public static class Metadata {
 
         @XmlElement(name = "entry")
         private List<Entry> entries;

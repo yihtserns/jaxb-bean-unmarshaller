@@ -15,6 +15,8 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
+import com.github.yihtserns.jaxb.bean.unmarshaller.api.InstanceBeanHandler;
+import com.github.yihtserns.jaxb.bean.unmarshaller.api.SpringBeanHandler;
 import java.io.StringReader;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -54,7 +56,7 @@ public class JaxbBeanUnmarshallerTest {
         protected <T> T unmarshal(String xml, Class<T> rootType, Class<?>... allTypes) throws Exception {
             JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(merge(rootType, allTypes));
 
-            return rootType.cast(unmarshaller.unmarshal(toElement(xml)));
+            return rootType.cast(unmarshaller.unmarshal(toElement(xml), InstanceBeanHandler.INSTANCE));
         }
 
         private static Element toElement(String xml) throws Exception {
@@ -69,7 +71,7 @@ public class JaxbBeanUnmarshallerTest {
 
         @Override
         protected <T> T unmarshal(String xml, Class<T> rootType, Class<?>... allTypes) throws Exception {
-            JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.forSpring(merge(rootType, allTypes));
+            JaxbBeanUnmarshaller unmarshaller = JaxbBeanUnmarshaller.newInstance(merge(rootType, allTypes));
             final UnmarshallerNamespaceHandler unmarshallerNamespaceHandler = new UnmarshallerNamespaceHandler(unmarshaller);
 
             GenericApplicationContext appContext = new GenericApplicationContext();
@@ -347,7 +349,7 @@ public class JaxbBeanUnmarshallerTest {
             @Override
             protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
                 try {
-                    return (AbstractBeanDefinition) unmarshaller.unmarshal(element);
+                    return (AbstractBeanDefinition) unmarshaller.unmarshal(element, SpringBeanHandler.INSTANCE);
                 } catch (Exception ex) {
                     String localName = parserContext.getDelegate().getLocalName(element);
 

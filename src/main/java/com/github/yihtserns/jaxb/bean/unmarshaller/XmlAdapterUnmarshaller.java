@@ -15,6 +15,7 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
+import com.github.yihtserns.jaxb.bean.unmarshaller.api.BeanHandler;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import org.w3c.dom.Node;
 
@@ -32,11 +33,9 @@ class XmlAdapterUnmarshaller<N extends Node> implements Unmarshaller<N> {
         this.delegate = delegate;
     }
 
-    public Object unmarshal(N node) throws Exception {
-        return unmarshalWith(xmlAdapter, delegate.unmarshal(node));
-    }
+    public Object unmarshal(N node, BeanHandler beanHandler) throws Exception {
+        Object value = delegate.unmarshal(node, beanHandler);
 
-    protected Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception {
-        return xmlAdapter.unmarshal(from);
+        return beanHandler.unmarshalWith(xmlAdapter, value);
     }
 }

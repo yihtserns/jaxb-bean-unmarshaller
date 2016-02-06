@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 yihtserns.
+ * Copyright 2016 yihtserns.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.yihtserns.jaxb.bean.unmarshaller;
+package com.github.yihtserns.jaxb.bean.unmarshaller.api;
 
-import com.github.yihtserns.jaxb.bean.unmarshaller.api.BeanHandler;
-import org.w3c.dom.Element;
+import java.util.List;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 /**
  *
  * @author yihtserns
  */
-enum ElementTextContentUnmarshaller implements Unmarshaller<Element> {
+public interface BeanHandler {
 
-    INSTANCE;
+    Object createBean(Class<?> beanClass) throws Exception;
 
-    @Override
-    public Object unmarshal(Element element, BeanHandler beanHandler) {
-        return element.getTextContent();
-    }
+    void setBeanProperty(Object bean, String propertyName, Object propertyValue);
+
+    List<Object> getOrCreateValueList(Object bean, String propertyName);
+
+    List<Object> newList();
+
+    Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception;
+
+    Object postProcess(Object bean);
 }

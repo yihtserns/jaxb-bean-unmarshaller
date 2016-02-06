@@ -15,6 +15,7 @@
  */
 package com.github.yihtserns.jaxb.bean.unmarshaller;
 
+import com.github.yihtserns.jaxb.bean.unmarshaller.api.BeanHandler;
 import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.InitializableElementUnmarshaller;
 import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider;
 import com.github.yihtserns.jaxb.bean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider.Handler;
@@ -42,31 +43,15 @@ public class JaxbBeanUnmarshaller {
         this.globalName2Unmarshaller = globalName2Unmarshaller;
     }
 
-    public Object unmarshal(Element element) throws Exception {
+    public Object unmarshal(Element element, BeanHandler beanHandler) throws Exception {
         String globalName = element.getLocalName();
         Unmarshaller<Element> unmarshaller = globalName2Unmarshaller.get(globalName);
 
-        return unmarshaller.unmarshal(element);
+        return unmarshaller.unmarshal(element, beanHandler);
     }
 
     public static JaxbBeanUnmarshaller newInstance(Class<?>... types) throws Exception {
         Builder builder = new Builder();
-        for (Class<?> type : types) {
-            builder.addGlobalType(type);
-        }
-        builder.init();
-
-        return new JaxbBeanUnmarshaller(builder.globalName2Unmarshaller);
-    }
-
-    public static JaxbBeanUnmarshaller forSpring(Class<?>... types) throws Exception {
-        Builder builder = new Builder() {
-
-            @Override
-            protected InitializableElementUnmarshaller createBeanUnmarshaller(Class<?> type) throws Exception {
-                return new SpringBeanUnmarshaller(type);
-            }
-        };
         for (Class<?> type : types) {
             builder.addGlobalType(type);
         }
