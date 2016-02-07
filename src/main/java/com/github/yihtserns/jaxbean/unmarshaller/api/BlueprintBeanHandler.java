@@ -24,6 +24,7 @@ import org.apache.aries.blueprint.ParserContext;
 import org.apache.aries.blueprint.mutable.MutableBeanMetadata;
 import org.apache.aries.blueprint.mutable.MutableCollectionMetadata;
 import org.apache.aries.blueprint.mutable.MutablePassThroughMetadata;
+import org.apache.aries.blueprint.mutable.MutableValueMetadata;
 import org.osgi.service.blueprint.reflect.BeanProperty;
 import org.osgi.service.blueprint.reflect.Metadata;
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
@@ -59,8 +60,8 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
             return (Metadata) value;
         }
 
-        MutablePassThroughMetadata valueMetadata = parserContext.createMetadata(MutablePassThroughMetadata.class);
-        valueMetadata.setObject(value);
+        MutableValueMetadata valueMetadata = parserContext.createMetadata(MutableValueMetadata.class);
+        valueMetadata.setStringValue((String) value);
 
         return valueMetadata;
     }
@@ -83,10 +84,13 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
         MutableCollectionMetadata argumentsMetadata = parserContext.createMetadata(MutableCollectionMetadata.class);
         argumentsMetadata.addValue(toMetadata(from));
 
+        MutablePassThroughMetadata xmlAdapterMetadata = parserContext.createMetadata(MutablePassThroughMetadata.class);
+        xmlAdapterMetadata.setObject(xmlAdapter);
+
         MutableBeanMetadata factoryBeanMetadata = parserContext.createMetadata(MutableBeanMetadata.class);
         factoryBeanMetadata.setRuntimeClass(MethodInvokingFactoryBean.class);
         factoryBeanMetadata.setInitMethod("afterPropertiesSet");
-        factoryBeanMetadata.addProperty("targetObject", toMetadata(xmlAdapter));
+        factoryBeanMetadata.addProperty("targetObject", xmlAdapterMetadata);
         factoryBeanMetadata.addProperty("targetMethod", toMetadata("unmarshal"));
         factoryBeanMetadata.addProperty("arguments", argumentsMetadata);
 
