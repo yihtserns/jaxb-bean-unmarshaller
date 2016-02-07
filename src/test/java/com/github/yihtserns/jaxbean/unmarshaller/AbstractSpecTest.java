@@ -597,8 +597,11 @@ public abstract class AbstractSpecTest {
         }
     }
 
+    /**
+     * NOTE: Seems like Aries Blueprint couldn't deal with non-public superclass.
+     */
     @XmlAccessorType(XmlAccessType.FIELD)
-    static class JaxbParent extends JaxbParent2 {
+    public static class JaxbParent extends JaxbParent2 {
 
         @XmlAttribute(name = "duration")
         private Long length;
@@ -731,8 +734,11 @@ public abstract class AbstractSpecTest {
         }
     }
 
+    /**
+     * NOTE: Seems like Aries Blueprint couldn't deal with non-public superclass.
+     */
     @XmlAccessorType(XmlAccessType.PROPERTY)
-    private static class JaxbParent2 {
+    public static class JaxbParent2 {
 
         private Boolean validity;
         private String comment;
@@ -892,12 +898,18 @@ public abstract class AbstractSpecTest {
         }
     }
 
+    /**
+     * NOTE: Seems like Aries Blueprint doesn't know {@code Note} can be considered similar to {@code Note<Object>}.
+     */
     @XmlRootElement
-    public static class Message extends Note {
+    public static class Message extends Note<Object> {
     }
 
+    /**
+     * NOTE: Seems like Aries Blueprint doesn't know {@code Note} can be considered similar to {@code Note<Object>}.
+     */
     @XmlRootElement
-    public static class Annotation extends Note {
+    public static class Annotation extends Note<Object> {
     }
 
     public static class SideNote extends Note {

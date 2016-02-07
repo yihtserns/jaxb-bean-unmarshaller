@@ -39,10 +39,24 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import static com.github.yihtserns.jaxbean.unmarshaller.AbstractSpecTest.merge;
+import com.github.yihtserns.jaxbean.unmarshaller.api.BlueprintBeanHandler;
+import java.io.File;
+import java.net.URI;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Set;
+import org.apache.aries.blueprint.container.BlueprintContainerImpl;
+import org.apache.aries.blueprint.container.SimpleNamespaceHandlerSet;
+import org.apache.aries.blueprint.mutable.MutableBeanMetadata;
+import org.apache.aries.blueprint.parser.NamespaceHandlerSet;
+import org.apache.commons.io.FileUtils;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
+import org.osgi.service.blueprint.reflect.ComponentMetadata;
 
 /**
  * @author yihtserns
@@ -368,6 +382,77 @@ public class JaxbeanUnmarshallerTest {
             }
 
             public BeanDefinitionHolder decorate(Node source, BeanDefinitionHolder definition, ParserContext parserContext) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        }
+    }
+
+    public static final class OsgiBlueprintTest extends AbstractSpecTest {
+
+        @Rule
+        public TemporaryFolder tempFolder = new TemporaryFolder();
+
+        @Override
+        protected <T> T unmarshal(String xml, Class<T> rootType, Class<?>... otherTypes) throws Exception {
+            File file = tempFolder.newFile();
+            FileUtils.write(file, "<blueprint xmlns=\"http://www.osgi.org/xmlns/blueprint/v1.0.0\">" + xml + "</blueprint>");
+
+            final String id = "bean";
+            final JaxbeanUnmarshaller unmarshaller = JaxbeanUnmarshaller.newInstance(merge(rootType, otherTypes));
+            final URI jaxbNamespaceUri = new URI("http://example.com/jaxb");
+            BlueprintContainerImpl blueprintContainer
+                    = new BlueprintContainerImpl(getClass().getClassLoader(), Arrays.asList(file.toURI().toURL()), false) {
+
+                        @Override
+                        protected NamespaceHandlerSet createNamespaceHandlerSet() {
+                            SimpleNamespaceHandlerSet nsHandlerSet = (SimpleNamespaceHandlerSet) super.createNamespaceHandlerSet();
+                            if (!nsHandlerSet.getNamespaces().contains(jaxbNamespaceUri)) {
+                                nsHandlerSet.addNamespace(jaxbNamespaceUri, null, new UnmarshallerNamespaceHandler(unmarshaller, id));
+                            }
+
+                            return nsHandlerSet;
+                        }
+
+                    };
+            blueprintContainer.init(false);
+
+            try {
+                return rootType.cast(blueprintContainer.getComponentInstance(id));
+            } finally {
+                blueprintContainer.destroy();
+            }
+        }
+
+        private static final class UnmarshallerNamespaceHandler implements org.apache.aries.blueprint.NamespaceHandler {
+
+            private final JaxbeanUnmarshaller unmarshaller;
+            private final String id;
+
+            public UnmarshallerNamespaceHandler(JaxbeanUnmarshaller unmarshaller, String id) {
+                this.unmarshaller = unmarshaller;
+                this.id = id;
+            }
+
+            public org.osgi.service.blueprint.reflect.Metadata parse(Element element, org.apache.aries.blueprint.ParserContext parserContext) {
+                try {
+                    MutableBeanMetadata beanMetadata = (MutableBeanMetadata) unmarshaller.unmarshal(element, new BlueprintBeanHandler(parserContext));
+                    beanMetadata.setId(id);
+
+                    return beanMetadata;
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+
+            public URL getSchemaLocation(String string) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            public Set<Class> getManagedClasses() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            public ComponentMetadata decorate(Node node, ComponentMetadata cm, org.apache.aries.blueprint.ParserContext pc) {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
         }
