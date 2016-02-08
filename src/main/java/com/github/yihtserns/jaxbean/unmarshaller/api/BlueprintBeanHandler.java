@@ -41,6 +41,7 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
         this.parserContext = parserContext;
     }
 
+    @Override
     public MutableBeanMetadata createBean(Class<?> beanClass) throws Exception {
         MutableBeanMetadata beanMetadata = parserContext.createMetadata(MutableBeanMetadata.class);
         beanMetadata.setRuntimeClass(beanClass);
@@ -48,11 +49,12 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
         return beanMetadata;
     }
 
+    @Override
     public void setBeanProperty(MutableBeanMetadata bean, String propertyName, Object propertyValue) {
         bean.addProperty(propertyName, toMetadata(propertyValue));
     }
 
-    public Metadata toMetadata(Object value) {
+    private Metadata toMetadata(Object value) {
         if (value instanceof CollectionMetadataList) {
             value = ((CollectionMetadataList) value).collectionMetadata;
         }
@@ -66,6 +68,7 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
         return valueMetadata;
     }
 
+    @Override
     public List<Object> getOrCreateValueList(MutableBeanMetadata bean, String propertyName) {
         for (BeanProperty property : bean.getProperties()) {
             if (propertyName.equals(property.getName())) {
@@ -76,10 +79,12 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
         return newList();
     }
 
+    @Override
     public List<Object> newList() {
         return new CollectionMetadataList<Object>(parserContext.createMetadata(MutableCollectionMetadata.class));
     }
 
+    @Override
     public Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception {
         MutableCollectionMetadata argumentsMetadata = parserContext.createMetadata(MutableCollectionMetadata.class);
         argumentsMetadata.addValue(toMetadata(from));
@@ -101,6 +106,7 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
         return beanMetadata;
     }
 
+    @Override
     public Object postProcess(MutableBeanMetadata bean) {
         return bean;
     }
