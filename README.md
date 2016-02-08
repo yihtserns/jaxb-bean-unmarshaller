@@ -2,7 +2,7 @@ JAXBean Unmarshaller
 ====================
 This is Just Another Xml-Bean Unmarshaller.  Created this because I thought it'll be nice if JAXB Unmarshaller can produce things other than JAXB classes' objects.
 
-**Note**: This is a work-in-progress so not everything JAXB-ish is supported.  To see what is supported, see src/test/java/com/github/yihtserns/jaxbean/unmarshaller/AbstractSpecTest.java.
+**Note**: This is a work-in-progress so not everything JAXB-ish is supported.  To see what is supported, see [AbstractSpecTest.java](src/test/java/com/github/yihtserns/jaxbean/unmarshaller/AbstractSpecTest.java).
 
 Usage example
 ------------
