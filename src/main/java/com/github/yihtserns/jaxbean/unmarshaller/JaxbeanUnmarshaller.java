@@ -21,7 +21,6 @@ import com.github.yihtserns.jaxbean.unmarshaller.Unmarshaller.ElementUnmarshalle
 import com.github.yihtserns.jaxbean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider.Handler;
 import java.beans.Introspector;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -158,18 +157,6 @@ public class JaxbeanUnmarshaller {
         @Override
         public void setBeanProperty(BeanWrapper bean, String propertyName, Object propertyValue) {
             bean.setPropertyValue(propertyName, propertyValue);
-        }
-
-        @Override
-        public List<Object> getOrCreateValueList(BeanWrapper bean, String propertyName) {
-            Object valueList = bean.getPropertyValue(propertyName);
-            if (valueList == null) {
-                valueList = new ArrayList<Object>();
-            } else if (valueList.getClass().isArray()) {
-                valueList = new ArrayList<Object>(Arrays.asList((Object[]) valueList));
-            }
-
-            return (List) valueList;
         }
 
         @Override

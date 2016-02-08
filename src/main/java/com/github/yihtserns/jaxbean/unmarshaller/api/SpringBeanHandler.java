@@ -17,7 +17,6 @@ package com.github.yihtserns.jaxbean.unmarshaller.api;
 
 import java.util.List;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
-import org.springframework.beans.PropertyValue;
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedList;
@@ -38,18 +37,6 @@ public enum SpringBeanHandler implements BeanHandler<BeanDefinitionBuilder> {
     @Override
     public void setBeanProperty(BeanDefinitionBuilder bean, String propertyName, Object propertyValue) {
         bean.addPropertyValue(propertyName, propertyValue);
-    }
-
-    @Override
-    public List<Object> getOrCreateValueList(BeanDefinitionBuilder bean, String propertyName) {
-        PropertyValue propertyValue = bean.getRawBeanDefinition().getPropertyValues().getPropertyValue(propertyName);
-        List<Object> valueList;
-        if (propertyValue == null) {
-            valueList = new ManagedList<Object>();
-        } else {
-            valueList = (List) propertyValue.getValue();
-        }
-        return valueList;
     }
 
     @Override

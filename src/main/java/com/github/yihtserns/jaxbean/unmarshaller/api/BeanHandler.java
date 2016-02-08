@@ -28,8 +28,6 @@ public interface BeanHandler<T> {
 
     void setBeanProperty(T bean, String propertyName, Object propertyValue);
 
-    List<Object> getOrCreateValueList(T bean, String propertyName);
-
     Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception;
 
     Object postProcessList(List<Object> unprocessedList);

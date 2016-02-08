@@ -15,17 +15,13 @@
  */
 package com.github.yihtserns.jaxbean.unmarshaller.api;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import org.apache.aries.blueprint.ParserContext;
 import org.apache.aries.blueprint.mutable.MutableBeanMetadata;
 import org.apache.aries.blueprint.mutable.MutableCollectionMetadata;
 import org.apache.aries.blueprint.mutable.MutablePassThroughMetadata;
 import org.apache.aries.blueprint.mutable.MutableValueMetadata;
-import org.osgi.service.blueprint.reflect.BeanProperty;
 import org.osgi.service.blueprint.reflect.Metadata;
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
 
@@ -55,9 +51,6 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
     }
 
     private Metadata toMetadata(Object value) {
-        if (value instanceof CollectionMetadataList) {
-            value = ((CollectionMetadataList) value).collectionMetadata;
-        }
         if (value instanceof Metadata) {
             return (Metadata) value;
         }
@@ -66,17 +59,6 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
         valueMetadata.setStringValue((String) value);
 
         return valueMetadata;
-    }
-
-    @Override
-    public List<Object> getOrCreateValueList(MutableBeanMetadata bean, String propertyName) {
-        for (BeanProperty property : bean.getProperties()) {
-            if (propertyName.equals(property.getName())) {
-                MutableCollectionMetadata valueListMetadata = (MutableCollectionMetadata) property.getValue();
-                return new CollectionMetadataList<Object>(valueListMetadata);
-            }
-        }
-        return new CollectionMetadataList<Object>(parserContext.createMetadata(MutableCollectionMetadata.class));
     }
 
     @Override
@@ -114,109 +96,5 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
     @Override
     public Object postProcess(MutableBeanMetadata bean) {
         return bean;
-    }
-
-    private final class CollectionMetadataList<T> implements List<T> {
-
-        private MutableCollectionMetadata collectionMetadata;
-
-        public CollectionMetadataList(MutableCollectionMetadata collectionMetadata) {
-            this.collectionMetadata = collectionMetadata;
-        }
-
-        public boolean add(T e) {
-            collectionMetadata.addValue(toMetadata(e));
-
-            return true;
-        }
-
-        public int size() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public boolean isEmpty() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public boolean contains(Object o) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public Iterator<T> iterator() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public Object[] toArray() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public <T> T[] toArray(T[] ts) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public boolean remove(Object o) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public boolean containsAll(Collection<?> clctn) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public boolean addAll(Collection<? extends T> clctn) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public boolean addAll(int i, Collection<? extends T> clctn) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public boolean removeAll(Collection<?> clctn) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public boolean retainAll(Collection<?> clctn) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public void clear() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public T get(int i) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public T set(int i, T e) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public void add(int i, T e) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public T remove(int i) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public int indexOf(Object o) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public int lastIndexOf(Object o) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public ListIterator<T> listIterator() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public ListIterator<T> listIterator(int i) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public List<T> subList(int i, int i1) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
     }
 }
