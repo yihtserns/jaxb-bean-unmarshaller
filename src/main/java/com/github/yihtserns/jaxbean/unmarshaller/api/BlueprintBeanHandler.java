@@ -76,11 +76,6 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
                 return new CollectionMetadataList<Object>(valueListMetadata);
             }
         }
-        return newList();
-    }
-
-    @Override
-    public List<Object> newList() {
         return new CollectionMetadataList<Object>(parserContext.createMetadata(MutableCollectionMetadata.class));
     }
 
@@ -104,6 +99,16 @@ public class BlueprintBeanHandler implements BeanHandler<MutableBeanMetadata> {
         beanMetadata.setFactoryMethod("getObject");
 
         return beanMetadata;
+    }
+
+    @Override
+    public Object postProcessList(List<Object> unprocessedList) {
+        MutableCollectionMetadata processedCollection = parserContext.createMetadata(MutableCollectionMetadata.class);
+        for (Object value : unprocessedList) {
+            processedCollection.addValue(toMetadata(value));
+        }
+
+        return processedCollection;
     }
 
     @Override

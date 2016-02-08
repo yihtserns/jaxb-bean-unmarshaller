@@ -43,18 +43,13 @@ public enum SpringBeanHandler implements BeanHandler<BeanDefinitionBuilder> {
     @Override
     public List<Object> getOrCreateValueList(BeanDefinitionBuilder bean, String propertyName) {
         PropertyValue propertyValue = bean.getRawBeanDefinition().getPropertyValues().getPropertyValue(propertyName);
-        List valueList;
+        List<Object> valueList;
         if (propertyValue == null) {
-            valueList = newList();
+            valueList = new ManagedList<Object>();
         } else {
             valueList = (List) propertyValue.getValue();
         }
         return valueList;
-    }
-
-    @Override
-    public List<Object> newList() {
-        return new ManagedList<Object>();
     }
 
     @Override
@@ -64,6 +59,16 @@ public enum SpringBeanHandler implements BeanHandler<BeanDefinitionBuilder> {
                 .addPropertyValue("targetMethod", "unmarshal")
                 .addPropertyValue("arguments", from)
                 .getBeanDefinition();
+    }
+
+    @Override
+    public Object postProcessList(List<Object> unprocessedList) {
+        ManagedList<Object> processedList = new ManagedList<Object>(unprocessedList.size());
+        for (Object value : unprocessedList) {
+            processedList.add(value);
+        }
+
+        return processedList;
     }
 
     @Override

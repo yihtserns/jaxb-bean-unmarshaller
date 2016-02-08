@@ -164,22 +164,22 @@ public class JaxbeanUnmarshaller {
         public List<Object> getOrCreateValueList(BeanWrapper bean, String propertyName) {
             Object valueList = bean.getPropertyValue(propertyName);
             if (valueList == null) {
-                valueList = newList();
+                valueList = new ArrayList<Object>();
             } else if (valueList.getClass().isArray()) {
-                valueList = new ArrayList(Arrays.asList((Object[]) valueList));
+                valueList = new ArrayList<Object>(Arrays.asList((Object[]) valueList));
             }
 
             return (List) valueList;
         }
 
         @Override
-        public List<Object> newList() {
-            return new ArrayList<Object>();
+        public Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception {
+            return xmlAdapter.unmarshal(from);
         }
 
         @Override
-        public Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception {
-            return xmlAdapter.unmarshal(from);
+        public Object postProcessList(List<Object> unprocessedList) {
+            return unprocessedList;
         }
 
         @Override

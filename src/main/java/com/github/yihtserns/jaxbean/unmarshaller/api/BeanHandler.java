@@ -30,9 +30,9 @@ public interface BeanHandler<T> {
 
     List<Object> getOrCreateValueList(T bean, String propertyName);
 
-    List<Object> newList();
-
     Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception;
+
+    Object postProcessList(List<Object> unprocessedList);
 
     Object postProcess(T bean);
 }

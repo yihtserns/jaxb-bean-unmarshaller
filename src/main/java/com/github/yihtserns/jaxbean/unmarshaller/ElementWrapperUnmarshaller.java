@@ -16,6 +16,7 @@
 package com.github.yihtserns.jaxbean.unmarshaller;
 
 import com.github.yihtserns.jaxbean.unmarshaller.api.BeanHandler;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,7 @@ class ElementWrapperUnmarshaller implements Unmarshaller<Element> {
 
     @Override
     public Object unmarshal(Element element, BeanHandler beanHandler) throws Exception {
-        List<Object> result = beanHandler.newList();
+        List<Object> result = new ArrayList<Object>();
         NodeList childNodes = element.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node item = childNodes.item(i);
@@ -48,7 +49,7 @@ class ElementWrapperUnmarshaller implements Unmarshaller<Element> {
                 result.add(instance);
             }
         }
-        return result;
+        return beanHandler.postProcessList(result);
     }
 
     public void put(String localName, Unmarshaller<Element> unmarshaller) {
