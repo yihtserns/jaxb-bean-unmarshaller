@@ -21,11 +21,16 @@ import com.github.yihtserns.jaxbean.unmarshaller.Unmarshaller.ElementUnmarshalle
 import com.github.yihtserns.jaxbean.unmarshaller.Unmarshaller.ElementUnmarshallerProvider.Handler;
 import java.beans.Introspector;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.PropertyAccessorFactory;
 import org.w3c.dom.Element;
 
 /**
@@ -41,6 +46,10 @@ public class JaxbeanUnmarshaller {
      */
     private JaxbeanUnmarshaller(Map<String, Unmarshaller<Element>> globalName2Unmarshaller) {
         this.globalName2Unmarshaller = globalName2Unmarshaller;
+    }
+
+    public Object unmarshal(Element element) throws Exception {
+        return unmarshal(element, ObjectBeanHandler.INSTANCE);
     }
 
     public Object unmarshal(Element element, BeanHandler beanHandler) throws Exception {
@@ -132,6 +141,50 @@ public class JaxbeanUnmarshaller {
                 name = Introspector.decapitalize(type.getSimpleName());
             }
             return name;
+        }
+    }
+
+    private enum ObjectBeanHandler implements BeanHandler<BeanWrapper> {
+
+        INSTANCE;
+
+        @Override
+        public BeanWrapper createBean(Class<?> beanClass) throws Exception {
+            Object instance = beanClass.newInstance();
+
+            return PropertyAccessorFactory.forBeanPropertyAccess(instance);
+        }
+
+        @Override
+        public void setBeanProperty(BeanWrapper bean, String propertyName, Object propertyValue) {
+            bean.setPropertyValue(propertyName, propertyValue);
+        }
+
+        @Override
+        public List<Object> getOrCreateValueList(BeanWrapper bean, String propertyName) {
+            Object valueList = bean.getPropertyValue(propertyName);
+            if (valueList == null) {
+                valueList = newList();
+            } else if (valueList.getClass().isArray()) {
+                valueList = new ArrayList(Arrays.asList((Object[]) valueList));
+            }
+
+            return (List) valueList;
+        }
+
+        @Override
+        public List<Object> newList() {
+            return new ArrayList<Object>();
+        }
+
+        @Override
+        public Object unmarshalWith(XmlAdapter xmlAdapter, Object from) throws Exception {
+            return xmlAdapter.unmarshal(from);
+        }
+
+        @Override
+        public Object postProcess(BeanWrapper bean) {
+            return bean.getWrappedInstance();
         }
     }
 }

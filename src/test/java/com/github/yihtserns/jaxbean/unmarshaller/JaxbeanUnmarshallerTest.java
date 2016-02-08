@@ -15,7 +15,6 @@
  */
 package com.github.yihtserns.jaxbean.unmarshaller;
 
-import com.github.yihtserns.jaxbean.unmarshaller.api.InstanceBeanHandler;
 import java.io.StringReader;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -31,7 +30,7 @@ public class JaxbeanUnmarshallerTest extends AbstractSpecTest {
     protected <T> T unmarshal(String xml, Class<T> rootType, Class<?>... allTypes) throws Exception {
         JaxbeanUnmarshaller unmarshaller = JaxbeanUnmarshaller.newInstance(merge(rootType, allTypes));
 
-        return rootType.cast(unmarshaller.unmarshal(toElement(xml), InstanceBeanHandler.INSTANCE));
+        return rootType.cast(unmarshaller.unmarshal(toElement(xml)));
     }
 
     private static Element toElement(String xml) throws Exception {
